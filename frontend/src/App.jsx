@@ -572,7 +572,7 @@ function App() {
       <div className="page-shell">
         <SiteHeader menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
-        <main>
+        <main className="site-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<About />} />
