@@ -18,11 +18,13 @@ export default function Leaderboard() {
   useEffect(() => {
     setLoading(true);
     setError(null);
+
     fetch(`/api/leaderboard?month=${month}&page=${page}`)
       .then(async (response) => {
         const data = await response.json();
-        if (!response.ok)
+        if (!response.ok) {
           throw new Error(data.detail || "Unable to load leaderboard");
+        }
         return data;
       })
       .then((data) => {
@@ -39,82 +41,42 @@ export default function Leaderboard() {
   };
 
   return (
-    <div className="leaderboard-page">
-      <h2>Monthly Leaderboard</h2>
-      <label>
-        Month
-        <input type="month" value={month} onChange={changeMonth} />
-      </label>
+    <section className="standings-surface"><div className="leaderboard-page">
+      <header className="standings-heading"><p className="standings-eyebrow">CODEPRO LK / RANKINGS</p><h2>Monthly Leaderboard</h2></header>
+      <label>Month<input type="month" value={month} onChange={changeMonth} /></label>
       {loading && <p>Loading...</p>}
       {error && <p className="error">{error}</p>}
-      {!loading &&
-        !error &&
-        (entries.length ? (
-          <>
+      {!loading && !error && (entries.length ? (
+        <>
+          <div className="ranking-table-scroll">
             <table>
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Username</th>
-                  <th>Correct</th>
-                  <th>Attempts</th>
-                </tr>
-              </thead>
+              <thead><tr><th scope="col">Rank</th><th scope="col">Username</th><th scope="col">Correct</th><th scope="col">Attempts</th></tr></thead>
               <tbody>
                 {entries.map((entry) => (
                   <tr key={entry.username} className={`rank-${entry.rank}`}>
-                    <td>
-                      <span className="rank-badge">{entry.rank}</span>
-                    </td>
+                    <td><span className="rank-badge">{entry.rank}</span></td>
                     <td className="rank-username">{entry.username}</td>
-                    <td>{entry.correct}</td>
-                    <td>{entry.attempts}</td>
+                    <td>{entry.correct}</td><td>{entry.attempts}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <nav
-              className="leaderboard-pagination"
-              aria-label="Leaderboard pages"
-            >
-              <button
-                type="button"
-                onClick={() => setPage((current) => current - 1)}
-                disabled={page === 1}
-              >
-                Previous
-              </button>
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-                (pageNumber) => (
-                  <button
-                    type="button"
-                    className={pageNumber === page ? "active" : ""}
-                    aria-current={pageNumber === page ? "page" : undefined}
-                    onClick={() => setPage(pageNumber)}
-                    key={pageNumber}
-                  >
-                    {pageNumber}
-                  </button>
-                ),
-              )}
-              <button
-                type="button"
-                onClick={() => setPage((current) => current + 1)}
-                disabled={page === totalPages}
-              >
-                Next
-              </button>
-            </nav>
-          </>
-        ) : (
-          <p>No submissions for this month.</p>
-        ))}
+          </div>
+          <nav className="leaderboard-pagination" aria-label="Leaderboard pages">
+            <button type="button" onClick={() => setPage((current) => current - 1)} disabled={page === 1}>Previous</button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+              <button type="button" className={pageNumber === page ? "active" : ""}
+                aria-current={pageNumber === page ? "page" : undefined}
+                onClick={() => setPage(pageNumber)} key={pageNumber}>{pageNumber}</button>
+            ))}
+            <button type="button" onClick={() => setPage((current) => current + 1)} disabled={page === totalPages}>Next</button>
+          </nav>
+        </>
+      ) : <p>No submissions for this month.</p>)}
       <div className="leaderboard-cta">
         <p>Want to join the leaderboard?</p>
-        <Link className="leaderboard-cta-link" to="/quiz">
-          Take today&apos;s quiz
-        </Link>
+        <Link className="leaderboard-cta-link" to="/quiz">Take today&apos;s quiz</Link>
       </div>
-    </div>
+    </div></section>
   );
 }
