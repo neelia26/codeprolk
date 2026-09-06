@@ -53,7 +53,9 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     hashed = auth.get_password_hash(user.password)
     db_user = models.User(
-        username=user.username, email=user.email, hashed_password=hashed, role='user')
+        username=user.username, email=user.email,
+        whatsapp_number=user.whatsapp_number,
+        hashed_password=hashed, role='user')
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

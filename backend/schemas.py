@@ -6,6 +6,7 @@ from datetime import datetime, date
 class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
+    whatsapp_number: str = Field(..., min_length=7, max_length=20)
     password: str = Field(..., min_length=8)
 
 

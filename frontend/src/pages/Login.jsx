@@ -10,6 +10,14 @@ export default function Login() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const readResponse = async (response) => {
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      return { detail: `Request failed with status ${response.status}` };
+    }
+    return response.json();
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -18,7 +26,7 @@ export default function Login() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
+    const data = await readResponse(res);
     if (!res.ok) {
       setError(data.detail || "Login failed");
       return;

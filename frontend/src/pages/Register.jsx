@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 export default function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [registered, setRegistered] = useState(false);
@@ -18,7 +19,12 @@ export default function Register() {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({
+        username,
+        email,
+        whatsapp_number: whatsappNumber,
+        password,
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -67,6 +73,17 @@ export default function Register() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <label>WhatsApp number</label>
+        <input
+          type="tel"
+          value={whatsappNumber}
+          minLength={7}
+          maxLength={20}
+          pattern="\\+?[0-9\\s()\\-]+"
+          onChange={(e) => setWhatsappNumber(e.target.value)}
+          placeholder="e.g. +94771234567"
           required
         />
         <label>Password</label>

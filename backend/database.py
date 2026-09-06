@@ -25,7 +25,10 @@ def migrate_users_table():
             "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username "
             "ON users (username)"
         ))
-
+        connection.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS "
+            "whatsapp_number VARCHAR(20)"
+        ))
         connection.execute(text(
             "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS is_active BOOLEAN "
             "NOT NULL DEFAULT TRUE"
