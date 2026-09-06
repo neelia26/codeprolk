@@ -238,7 +238,11 @@ export default function AdminPage() {
         {users.slice((userPage - 1) * 5, userPage * 5).map((user) => (
           <div className="admin-list-row" key={user.id}>
             <span>
-              <strong>{user.username}</strong> <small>{user.email}</small>
+              <strong>{user.username}</strong>{" "}
+              <small>
+                {user.email} · WhatsApp:{" "}
+                {user.whatsapp_number || "Not provided"}
+              </small>
             </span>
             {isPrimaryAdmin && user.role !== "admin" && (
               <button type="button" onClick={() => makeAdmin(user.id)}>

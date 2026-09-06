@@ -220,7 +220,13 @@ def admin_users(search: str = '', _: models.User = Depends(get_admin_user), db: 
         term = f'%{search}%'
         query = query.filter((models.User.username.ilike(term))
                              | (models.User.email.ilike(term)))
-    return {"users": [{"id": user.id, "username": user.username, "email": user.email, "role": user.role} for user in query.all()]}
+    return {"users": [{
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "whatsapp_number": user.whatsapp_number,
+        "role": user.role,
+    } for user in query.all()]}
 
 
 @app.delete('/api/admin/users/{user_id}')
