@@ -61,7 +61,7 @@ export default function AdminPage() {
     setUserSearch(event.target.value);
     setUserPage(1);
     const response = await fetch(
-      "/api/admin/users?search=${encodeURIComponent(event.target.value)}",
+      `/api/admin/users?search=${encodeURIComponent(event.target.value)}`,
       { headers },
     );
     const data = await response.json();
@@ -70,7 +70,7 @@ export default function AdminPage() {
 
   const deleteUser = async (userId) => {
     if (!window.confirm("Remove this user?")) return;
-    const response = await fetch("/api/admin/users/${userId}", {
+    const response = await fetch(`/api/admin/users/${userId}`, {
       method: "DELETE",
       headers,
     });
@@ -84,7 +84,7 @@ export default function AdminPage() {
   };
 
   const makeAdmin = async (userId) => {
-    const response = await fetch("/api/admin/users/${userId}/make-admin", {
+    const response = await fetch(`/api/admin/users/${userId}/make-admin`, {
       method: "POST",
       headers,
     });
