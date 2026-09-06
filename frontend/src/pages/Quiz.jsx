@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { getToken } from "../utils/auth";
 
@@ -8,6 +8,10 @@ export default function QuizPage() {
   const [selected, setSelected] = useState(null);
   const [message, setMessage] = useState(null);
   const [unavailableReason, setUnavailableReason] = useState(null);
+
+  const [result, setResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const submitLock = useRef(false);
 
   useEffect(() => {
     fetch("/api/quiz/today", {
@@ -20,32 +24,70 @@ export default function QuizPage() {
           data.submitted ? "submitted" : data.expired ? "expired" : null,
         );
         setLoading(false);
-      });
+      })
+      .catch(() => { setMessage("Unable to load the quiz. Please refresh to try again."); setLoading(false); });
   }, []);
 
   const submit = async () => {
+    if (!quiz || selected === null || submitLock.current) return;
+    submitLock.current = true;
+    setSubmitting(true);
     setMessage(null);
-    const token = getToken();
-
-    const response = await fetch("/api/quiz/submit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ quiz_id: quiz.id, selected_index: selected }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      setMessage(data.detail || "Error");
-      return;
+    try {
+      const response = await fetch("/api/quiz/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ quiz_id: quiz.id, selected_index: selected }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(typeof data.detail === "string" ? data.detail : "Submission failed.");
+        return;
+      }
+      setResult(data.is_correct === true ? "correct" : data.is_correct === false ? "incorrect" : "submitted");
+      setQuiz(null);
+      setSelected(null);
+      setUnavailableReason("submitted");
+    } catch {
+      setMessage("Could not confirm your submission. Refresh to check whether your attempt was recorded before trying again.");
+    } finally {
+      submitLock.current = false;
+      setSubmitting(false);
     }
-
-    setQuiz(null);
-    setSelected(null);
-    setUnavailableReason("submitted");
   };
+
+  if (result) {
+    const correct = result === "correct";
+    const incorrect = result === "incorrect";
+    return (
+      <section className="challenge-surface">
+        <div className={`quiz-page quiz-status-page quiz-feedback quiz-feedback-${result}`}>
+          {correct && (
+            <div className="quiz-confetti" aria-hidden="true">
+              {Array.from({ length: 36 }, (_, index) => (
+                <i key={index} style={{
+                  "--x": `${3 + (index * 19) % 94}%`,
+                  "--delay": `${(index % 9) * 0.06}s`,
+                  "--drift": `${((index * 31) % 121) - 60}px`,
+                  "--spin": `${index % 2 ? 480 : -480}deg`,
+                  "--color": ["#7dd3fc", "#e4c985", "#f1f5f9", "#6ee7b7"][index % 4],
+                }} />
+              ))}
+            </div>
+          )}
+          <div role="status" aria-live="polite" className="quiz-feedback-copy">
+            <span className="quiz-status-mark" aria-hidden="true">{correct ? "✓" : incorrect ? "×" : "✓"}</span>
+            <h2>{correct ? "Correct answer!" : incorrect ? "Not quite this time" : "Answer submitted"}</h2>
+            <p>{correct ? "Well done! Your answer has been recorded." : incorrect ? "That answer was incorrect. Your attempt has been recorded." : "Your attempt has been recorded."}</p>
+          </div>
+          <Link className="quiz-status-link" to="/leaderboard">View leaderboard</Link>
+        </div>
+      </section>
+    );
+  }
 
   if (loading) {
     return <section className="challenge-surface"><div className="quiz-page quiz-status-page"><p className="quiz-status">Loading today&apos;s quiz...</p></div></section>;
@@ -65,7 +107,7 @@ export default function QuizPage() {
       <section className="challenge-surface"><div className="quiz-page quiz-status-page">
         <span className="quiz-status-mark" aria-hidden="true">—</span>
         <h2>No quiz available at the moment</h2>
-        <p>Please wait</p>
+        <p>{message || "Please wait"}</p>
         <Link className="quiz-status-link" to="/leaderboard">View leaderboard</Link>
       </div></section>
     );
@@ -78,14 +120,14 @@ export default function QuizPage() {
         {quiz.options.map((opt, idx) => (
           <li key={idx}>
             <label>
-              <input type="radio" name="opt" checked={selected === idx} onChange={() => setSelected(idx)} />{" "}
+              <input type="radio" name="opt" disabled={submitting} checked={selected === idx} onChange={() => setSelected(idx)} />{" "}
               {opt}
             </label>
           </li>
         ))}
       </ul>
-      <button onClick={submit} disabled={selected === null}>Submit</button>
-      {message && <p>{message}</p>}
+      <button onClick={submit} disabled={selected === null || submitting}>{submitting ? "Submitting..." : "Submit"}</button>
+      {message && <p role="alert">{message}</p>}
     </div></section>
   );
 }

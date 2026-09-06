@@ -18,16 +18,16 @@ export default function Login() {
     return response.json();
   };
 
-  const submit = async (e) => {
-    e.preventDefault();
+  const submit = async (event) => {
+    event.preventDefault();
     setError(null);
-    const res = await fetch("/api/auth/login", {
+    const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    const data = await readResponse(res);
-    if (!res.ok) {
+    const data = await readResponse(response);
+    if (!response.ok) {
       setError(data.detail || "Login failed");
       return;
     }
@@ -36,23 +36,45 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-page">
-      <h2>Login</h2>
-      <form onSubmit={submit}>
-        <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} />
-        <label>Password</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Login</button>
-      </form>
-      {error && <p className="error">{error}</p>}
-      <p>
-        New user? <Link to="/register">Create an account</Link>
-      </p>
-    </div>
+    <section className="auth-surface">
+      <div className="auth-surface-grid" aria-hidden="true" />
+      <div className="auth-surface-orb auth-surface-orb-left" aria-hidden="true" />
+      <div className="auth-surface-orb auth-surface-orb-right" aria-hidden="true" />
+
+      <div className="auth-page">
+        <p className="auth-page-tag">CODEPRO LK / MEMBER ACCESS</p>
+        <h2>Login</h2>
+
+        <form onSubmit={submit}>
+          <label htmlFor="login-email">Email</label>
+          <input
+            id="login-email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+            required
+          />
+
+          <label htmlFor="login-password">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
+            required
+          />
+
+          <button type="submit">Login</button>
+        </form>
+
+        {error && <p className="error" role="alert">{error}</p>}
+
+        <p className="auth-page-footer">
+          New user? <Link to="/register">Create an account</Link>
+        </p>
+      </div>
+    </section>
   );
 }
