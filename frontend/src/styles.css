@@ -8452,3 +8452,41 @@ body,
 @media (prefers-reduced-motion: reduce) {
   .cp-blog h1::after { animation: none; background-position: 50% 0; }
 }
+
+.admin-row-actions,
+.cp-blog-manage-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.cp-blog-manage {
+  margin-top: 2.5rem;
+}
+
+.cp-blog-manage-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 16px;
+}
+
+.cp-blog-manage-card img {
+  display: block;
+  width: min(100%, 420px);
+  height: auto;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.cp-blog-manage-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0.5rem 0 1rem;
+}
+
+.cp-blog-manage-caption {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

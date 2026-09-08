@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, time, timedelta
+from zoneinfo import ZoneInfo
 import os
 
 import models
@@ -11,13 +12,20 @@ import auth
 from database import engine, get_db, migrate_users_table, Base
 from seed import create_default_admin
 
+
 models.Base.metadata.create_all(bind=engine)
 migrate_users_table()
 
 app = FastAPI()
 
-origins = [os.getenv('FRONTEND_URL', 'http://localhost:5173'),
-           "www.codeprolk.com", "https://codeprolk.com", "https://www.codeprolk.com", "http://codeprolk.com", "http://www.codeprolk.com",]
+origins = [
+    os.getenv("FRONTEND_URL", "http://localhost:5173"),
+    "www.codeprolk.com",
+    "https://codeprolk.com",
+    "https://www.codeprolk.com",
+    "http://codeprolk.com",
+    "http://www.codeprolk.com",
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,106 +37,222 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
+SRI_LANKA_TZ = ZoneInfo("Asia/Colombo")
+
+
+def sri_lanka_now():
+    return datetime.now(SRI_LANKA_TZ)
+
+
+def sri_lanka_today():
+    return sri_lanka_now().date()
+
+
+def quiz_expiry_for_date(quiz_date: date):
+    """
+    Database currently stores naive timestamps.
+    Store the Sri Lankan end-of-day wall-clock time as a naive datetime.
+    """
+    return datetime.combine(
+        quiz_date,
+        time(hour=23, minute=59, second=59),
+    )
+
+
+def local_naive_now():
+    """
+    Return current Sri Lankan wall-clock time without tzinfo so it can
+    safely be compared with the existing PostgreSQL timestamp columns.
+    """
+    return sri_lanka_now().replace(tzinfo=None)
+
 
 @app.on_event("startup")
 def startup_event():
     create_default_admin()
 
 
-def get_current_user(token: str = Depends(lambda: None), db: Session = Depends(get_db)):
-    # Dependency placeholder; token will be read from Authorization header in endpoints
+def get_current_user(
+    token: str = Depends(lambda: None),
+    db: Session = Depends(get_db),
+):
+    # Dependency placeholder; token will be read from Authorization header.
     return None
 
 
-@app.post('/api/auth/register')
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+@app.post("/api/auth/register")
+def register(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db),
+):
     existing = db.query(models.User).filter(
-        (models.User.email == user.email) |
-        (models.User.username == user.username)).first()
+        (models.User.email == user.email)
+        | (models.User.username == user.username)
+    ).first()
+
     if existing:
         if existing.email == user.email:
             raise HTTPException(
-                status_code=400, detail='Email already registered')
+                status_code=400,
+                detail="Email already registered",
+            )
+
         raise HTTPException(
-            status_code=400, detail='Username already registered')
+            status_code=400,
+            detail="Username already registered",
+        )
 
     hashed = auth.get_password_hash(user.password)
+
     db_user = models.User(
-        username=user.username, email=user.email,
+        username=user.username,
+        email=user.email,
         whatsapp_number=user.whatsapp_number,
-        hashed_password=hashed, role='user')
+        hashed_password=hashed,
+        role="user",
+    )
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return {"id": db_user.id, "username": db_user.username, "email": db_user.email}
+
+    return {
+        "id": db_user.id,
+        "username": db_user.username,
+        "email": db_user.email,
+    }
 
 
-@app.post('/api/auth/login')
-def login(data: dict, db: Session = Depends(get_db)):
-    email = data.get('email')
-    password = data.get('password')
-    user = db.query(models.User).filter(models.User.email == email).first()
-    if not user or not auth.verify_password(password, user.hashed_password):
-        raise HTTPException(status_code=401, detail='Invalid credentials')
+@app.post("/api/auth/login")
+def login(
+    data: dict,
+    db: Session = Depends(get_db),
+):
+    email = data.get("email")
+    password = data.get("password")
+
+    user = db.query(models.User).filter(
+        models.User.email == email
+    ).first()
+
+    if (
+        not user
+        or not auth.verify_password(
+            password,
+            user.hashed_password,
+        )
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+        )
 
     token = auth.create_access_token(
-        {"sub": user.email, "user_id": user.id, "role": user.role})
-    return {"access_token": token, "token_type": "bearer", "role": user.role}
+        {
+            "sub": user.email,
+            "user_id": user.id,
+            "role": user.role,
+        }
+    )
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "role": user.role,
+    }
 
 
-def get_user_from_header(authorization: str = Header(None), db: Session = Depends(get_db)):
+def get_user_from_header(
+    authorization: str = Header(None),
+    db: Session = Depends(get_db),
+):
     if not authorization:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail='Not authenticated')
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
     parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != 'bearer':
+
+    if (
+        len(parts) != 2
+        or parts[0].lower() != "bearer"
+    ):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid auth header')
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid auth header",
+        )
+
     token = parts[1]
     payload = auth.decode_token(token)
+
     if not payload:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token')
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+        )
+
     user = db.query(models.User).filter(
-        models.User.id == payload.get('user_id')).first()
+        models.User.id == payload.get("user_id")
+    ).first()
+
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
     return user
 
 
-def get_admin_user(user: models.User = Depends(get_user_from_header)):
-    if user.role != 'admin':
-        raise HTTPException(status_code=403, detail='Forbidden')
+def get_admin_user(
+    user: models.User = Depends(get_user_from_header),
+):
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden",
+        )
+
     return user
 
 
-app.include_router(make_blog_router(get_admin_user))
+# Preserve the existing Blog API.
+app.include_router(
+    make_blog_router(get_admin_user)
+)
 
 
-def deactivate_expired_quizzes(db: Session):
-    db.query(models.Quiz).filter(
-        models.Quiz.is_active == True,
-        models.Quiz.expiry < datetime.utcnow(),
-    ).update({models.Quiz.is_active: False}, synchronize_session=False)
-    db.commit()
+# ============================================================
+# QUIZ
+# ============================================================
 
+@app.get("/api/quiz/today")
+def get_today_quiz(
+    user: models.User = Depends(get_user_from_header),
+    db: Session = Depends(get_db),
+):
+    today = sri_lanka_today()
+    now = local_naive_now()
 
-@app.get('/api/quiz/today')
-def get_today_quiz(user: models.User = Depends(get_user_from_header), db: Session = Depends(get_db)):
-    deactivate_expired_quizzes(db)
-    today = date.today()
-    # Keep today's latest quiz available for reviewing an existing attempt.
-    quiz = db.query(models.Quiz).filter(
-        models.Quiz.date == today
-    ).order_by(models.Quiz.id.desc()).first()
+    # A quiz is selected by DATE, not by a globally active quiz.
+    # Therefore future quizzes can safely remain scheduled.
+    quiz = (
+        db.query(models.Quiz)
+        .filter(
+            models.Quiz.date == today,
+            models.Quiz.is_active == True,
+        )
+        .order_by(models.Quiz.id.desc())
+        .first()
+    )
+
     if not quiz:
-        return {"quiz": None}
-
-    submitted = db.query(models.Submission).filter(
-        models.Submission.user_id == user.id,
-        models.Submission.quiz_id == quiz.id,
-    ).first()
+        return {
+            "quiz": None,
+            "submitted": False,
+            "expired": False,
+        }
 
     quiz_data = {
         "id": quiz.id,
@@ -137,258 +261,715 @@ def get_today_quiz(user: models.User = Depends(get_user_from_header), db: Sessio
         "date": str(quiz.date),
         "expiry": quiz.expiry.isoformat(),
     }
-    if submitted:
+
+    submission = (
+        db.query(models.Submission)
+        .filter(
+            models.Submission.user_id == user.id,
+            models.Submission.quiz_id == quiz.id,
+        )
+        .first()
+    )
+
+    # If the user already answered today's quiz, return the quiz
+    # and their recorded attempt for review.
+    if submission:
         return {
             "quiz": quiz_data,
             "submitted": True,
+            "expired": quiz.expiry < now,
             "submission": {
-                "selected_index": submitted.selected_index,
-                "is_correct": submitted.is_correct,
+                "selected_index": submission.selected_index,
+                "is_correct": submission.is_correct,
                 "correct_index": quiz.correct_index,
             },
         }
-    if quiz.expiry < datetime.utcnow():
-        return {"quiz": None, "expired": True}
-    if not quiz.is_active:
-        return {"quiz": None}
-    return {"quiz": quiz_data}
+
+    if quiz.expiry < now:
+        return {
+            "quiz": None,
+            "submitted": False,
+            "expired": True,
+        }
+
+    return {
+        "quiz": quiz_data,
+        "submitted": False,
+        "expired": False,
+    }
 
 
-@app.post('/api/quiz/submit')
-def submit_answer(sub: schemas.SubmitAnswer, authorization: str = Header(None), db: Session = Depends(get_db)):
-    raise_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, detail='Not authenticated')
-    if not authorization:
-        raise raise_exception
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != 'bearer':
-        raise raise_exception
-    token = parts[1]
-    payload = auth.decode_token(token)
-    if not payload:
-        raise raise_exception
-    user = db.query(models.User).filter(
-        models.User.id == payload.get('user_id')).first()
-    if not user:
-        raise raise_exception
+@app.post("/api/quiz/submit")
+def submit_answer(
+    sub: schemas.SubmitAnswer,
+    user: models.User = Depends(get_user_from_header),
+    db: Session = Depends(get_db),
+):
+    quiz = db.query(models.Quiz).filter(
+        models.Quiz.id == sub.quiz_id
+    ).first()
 
-    quiz = db.query(models.Quiz).filter(models.Quiz.id == sub.quiz_id).first()
     if not quiz:
-        raise HTTPException(status_code=404, detail='Quiz not found')
+        raise HTTPException(
+            status_code=404,
+            detail="Quiz not found",
+        )
 
-    # Check expiry
-    if quiz.expiry < datetime.utcnow():
-        raise HTTPException(status_code=400, detail='Quiz expired')
+    today = sri_lanka_today()
+    now = local_naive_now()
 
-    # Check if user already submitted
-    existing = db.query(models.Submission).filter(
-        models.Submission.user_id == user.id, models.Submission.quiz_id == quiz.id).first()
+    # A scheduled quiz can only be answered on its own date.
+    if quiz.date != today:
+        raise HTTPException(
+            status_code=400,
+            detail="This quiz is not available today.",
+        )
+
+    if not quiz.is_active:
+        raise HTTPException(
+            status_code=400,
+            detail="This quiz is not active.",
+        )
+
+    if quiz.expiry < now:
+        raise HTTPException(
+            status_code=400,
+            detail="Quiz expired",
+        )
+
+    if sub.selected_index < 0 or sub.selected_index >= len(quiz.options):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid answer option.",
+        )
+
+    existing = (
+        db.query(models.Submission)
+        .filter(
+            models.Submission.user_id == user.id,
+            models.Submission.quiz_id == quiz.id,
+        )
+        .first()
+    )
+
     if existing:
-        raise HTTPException(status_code=400, detail='Already submitted')
+        raise HTTPException(
+            status_code=400,
+            detail="Already submitted",
+        )
 
-    is_correct = (sub.selected_index == quiz.correct_index)
+    is_correct = (
+        sub.selected_index == quiz.correct_index
+    )
+
     submission = models.Submission(
-        user_id=user.id, quiz_id=quiz.id, selected_index=sub.selected_index, is_correct=is_correct)
+        user_id=user.id,
+        quiz_id=quiz.id,
+        selected_index=sub.selected_index,
+        is_correct=is_correct,
+    )
+
     db.add(submission)
     db.commit()
-    return {"ok": True, "is_correct": is_correct, "correct_index": quiz.correct_index}
+
+    return {
+        "ok": True,
+        "is_correct": is_correct,
+        "correct_index": quiz.correct_index,
+    }
 
 
-@app.post('/api/admin/quiz')
-def create_quiz(q: schemas.QuizCreate, _: models.User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    db.query(models.Quiz).update({models.Quiz.is_active: False})
-    quiz = models.Quiz(question=q.question, options=q.options,
-                       correct_index=q.correct_index, date=q.date, expiry=q.expiry,
-                       is_active=True)
+# ============================================================
+# ADMIN - QUIZZES
+# ============================================================
+
+@app.post("/api/admin/quiz")
+def create_quiz(
+    q: schemas.QuizCreate,
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    today = sri_lanka_today()
+
+    if q.date < today:
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot schedule a quiz for a past date.",
+        )
+
+    # Keep exactly one active quiz per calendar date.
+    existing = (
+        db.query(models.Quiz)
+        .filter(
+            models.Quiz.date == q.date,
+            models.Quiz.is_active == True,
+        )
+        .first()
+    )
+
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"A quiz is already scheduled for {q.date}. "
+                "Edit the existing quiz instead."
+            ),
+        )
+
+    quiz = models.Quiz(
+        question=q.question,
+        options=q.options,
+        correct_index=q.correct_index,
+        date=q.date,
+        expiry=quiz_expiry_for_date(q.date),
+        is_active=True,
+    )
+
     db.add(quiz)
     db.commit()
     db.refresh(quiz)
-    return {"id": quiz.id}
+
+    return {
+        "id": quiz.id,
+        "date": str(quiz.date),
+        "message": "Quiz scheduled successfully",
+    }
 
 
-@app.get('/api/admin/quizzes')
-def admin_quizzes(_: models.User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    deactivate_expired_quizzes(db)
-    quizzes = db.query(models.Quiz).filter(
-        models.Quiz.is_active == True
-    ).order_by(models.Quiz.date.desc()).all()
+@app.get("/api/admin/quizzes")
+def admin_quizzes(
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    today = sri_lanka_today()
+
+    quizzes = (
+        db.query(models.Quiz)
+        .order_by(
+            models.Quiz.date.asc(),
+            models.Quiz.id.asc(),
+        )
+        .all()
+    )
+
     result = []
+
     for q in quizzes:
-        result.append({"id": q.id, "question": q.question,
-                      "options": q.options, "correct_index": q.correct_index,
-                       "date": str(q.date), "expiry": q.expiry.isoformat(),
-                       "is_active": q.is_active})
+        if q.date < today:
+            quiz_status = "completed"
+        elif q.date == today:
+            quiz_status = "today"
+        else:
+            quiz_status = "scheduled"
+
+        result.append(
+            {
+                "id": q.id,
+                "question": q.question,
+                "options": q.options,
+                "correct_index": q.correct_index,
+                "date": str(q.date),
+                "expiry": q.expiry.isoformat(),
+                "is_active": q.is_active,
+                "status": quiz_status,
+            }
+        )
+
     return {"quizzes": result}
 
 
-@app.put('/api/admin/quiz/{quiz_id}')
-def update_quiz(quiz_id: int, q: schemas.QuizCreate, _: models.User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
+@app.put("/api/admin/quiz/{quiz_id}")
+def update_quiz(
+    quiz_id: int,
+    q: schemas.QuizCreate,
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    quiz = db.query(models.Quiz).filter(
+        models.Quiz.id == quiz_id
+    ).first()
+
     if not quiz:
-        raise HTTPException(status_code=404, detail='Quiz not found')
-    db.query(models.Quiz).filter(models.Quiz.id != quiz_id).update(
-        {models.Quiz.is_active: False})
+        raise HTTPException(
+            status_code=404,
+            detail="Quiz not found",
+        )
+
+    today = sri_lanka_today()
+
+    # Historical quiz data is kept unchanged because leaderboard and
+    # submission records may depend on it.
+    if quiz.date < today:
+        raise HTTPException(
+            status_code=400,
+            detail="Completed quizzes cannot be edited.",
+        )
+
+    if q.date < today:
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot move a quiz to a past date.",
+        )
+
+    conflicting_quiz = (
+        db.query(models.Quiz)
+        .filter(
+            models.Quiz.id != quiz_id,
+            models.Quiz.date == q.date,
+            models.Quiz.is_active == True,
+        )
+        .first()
+    )
+
+    if conflicting_quiz:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Another quiz is already scheduled for {q.date}."
+            ),
+        )
+
     quiz.question = q.question
     quiz.options = q.options
     quiz.correct_index = q.correct_index
     quiz.date = q.date
-    quiz.expiry = q.expiry
+    quiz.expiry = quiz_expiry_for_date(q.date)
     quiz.is_active = True
+
     db.commit()
-    return {"id": quiz.id}
+    db.refresh(quiz)
+
+    return {
+        "id": quiz.id,
+        "date": str(quiz.date),
+        "message": "Quiz updated successfully",
+    }
 
 
-@app.get('/api/admin/users')
-def admin_users(search: str = '', _: models.User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    query = db.query(models.User).order_by(models.User.id)
+
+@app.delete("/api/admin/quiz/{quiz_id}")
+def delete_quiz(
+    quiz_id: int,
+    force: bool = False,
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    quiz = db.query(models.Quiz).filter(
+        models.Quiz.id == quiz_id
+    ).first()
+
+    if not quiz:
+        raise HTTPException(
+            status_code=404,
+            detail="Quiz not found",
+        )
+
+    today = sri_lanka_today()
+
+    # Keep completed quizzes protected as historical records.
+    if quiz.date < today:
+        raise HTTPException(
+            status_code=400,
+            detail="Completed quizzes cannot be deleted.",
+        )
+
+    submission_count = (
+        db.query(models.Submission)
+        .filter(models.Submission.quiz_id == quiz_id)
+        .count()
+    )
+
+    # This is intentionally a normal 200 response, not an HTTP conflict.
+    # The frontend uses it to show the stronger confirmation popup.
+    if submission_count > 0 and not force:
+        return {
+            "deleted": False,
+            "requires_confirmation": True,
+            "submission_count": submission_count,
+            "message": (
+                f"This quiz has {submission_count} submission"
+                f"{'' if submission_count == 1 else 's'}."
+            ),
+        }
+
+    try:
+        if submission_count > 0:
+            db.query(models.Submission).filter(
+                models.Submission.quiz_id == quiz_id
+            ).delete(synchronize_session=False)
+
+        db.delete(quiz)
+        db.commit()
+
+        return {
+            "deleted": True,
+            "requires_confirmation": False,
+            "submission_count": submission_count,
+            "message": "Quiz deleted successfully.",
+        }
+    except Exception:
+        db.rollback()
+        raise
+
+
+# ============================================================
+# ADMIN - USERS
+# ============================================================
+
+@app.get("/api/admin/users")
+def admin_users(
+    search: str = "",
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    query = db.query(models.User).order_by(
+        models.User.id
+    )
+
     if search:
-        term = f'%{search}%'
-        query = query.filter((models.User.username.ilike(term))
-                             | (models.User.email.ilike(term)))
-    return {"users": [{
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "whatsapp_number": user.whatsapp_number,
-        "role": user.role,
-    } for user in query.all()]}
+        term = f"%{search}%"
+
+        query = query.filter(
+            (models.User.username.ilike(term))
+            | (models.User.email.ilike(term))
+        )
+
+    return {
+        "users": [
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "whatsapp_number": user.whatsapp_number,
+                "role": user.role,
+            }
+            for user in query.all()
+        ]
+    }
 
 
-@app.delete('/api/admin/users/{user_id}')
-def delete_user(user_id: int, admin: models.User = Depends(get_admin_user), db: Session = Depends(get_db)):
+@app.delete("/api/admin/users/{user_id}")
+def delete_user(
+    user_id: int,
+    admin: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
     if user_id == admin.id:
         raise HTTPException(
-            status_code=400, detail='You cannot remove your own admin account')
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+            status_code=400,
+            detail="You cannot remove your own admin account",
+        )
+
+    user = db.query(models.User).filter(
+        models.User.id == user_id
+    ).first()
+
     if not user:
-        raise HTTPException(status_code=404, detail='User not found')
-    if user.role == 'admin' or user.id == 2:
         raise HTTPException(
-            status_code=400, detail='Admin accounts cannot be removed')
-    db.query(models.Submission).filter(models.Submission.user_id ==
-                                       user_id).delete(synchronize_session=False)
+            status_code=404,
+            detail="User not found",
+        )
+
+    if user.role == "admin" or user.id == 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Admin accounts cannot be removed",
+        )
+
+    db.query(models.Submission).filter(
+        models.Submission.user_id == user_id
+    ).delete(synchronize_session=False)
+
     db.delete(user)
     db.commit()
+
     return {"ok": True}
 
 
-@app.post('/api/admin/users/{user_id}/make-admin')
-def make_admin(user_id: int, admin: models.User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    if admin.email != 'codeprolkyt@gmail.com':
+@app.post("/api/admin/users/{user_id}/make-admin")
+def make_admin(
+    user_id: int,
+    admin: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    if admin.email != "codeprolkyt@gmail.com":
         raise HTTPException(
-            status_code=403, detail='Only the primary admin can grant admin access')
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+            status_code=403,
+            detail="Only the primary admin can grant admin access",
+        )
+
+    user = db.query(models.User).filter(
+        models.User.id == user_id
+    ).first()
+
     if not user:
-        raise HTTPException(status_code=404, detail='User not found')
-    user.role = 'admin'
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
+    user.role = "admin"
     db.commit()
-    return {"ok": True, "id": user.id, "role": user.role}
+
+    return {
+        "ok": True,
+        "id": user.id,
+        "role": user.role,
+    }
 
 
-@app.get('/api/admin/stats')
-def admin_stats(_: models.User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    month_start = datetime.utcnow().replace(
-        day=1, hour=0, minute=0, second=0, microsecond=0)
-    month_end = (month_start.replace(day=28) +
-                 timedelta(days=4)).replace(day=1)
-    submissions = db.query(models.Submission).filter(
-        models.Submission.submitted_at >= month_start,
-        models.Submission.submitted_at < month_end,
-    ).all()
-    days = {}
-    current_day = month_start.date()
-    while current_day < month_end.date():
-        days[str(current_day)] = {"attempts": 0, "correct": 0}
-        current_day += timedelta(days=1)
-    for submission in submissions:
-        day = str(submission.submitted_at.date())
-        days[day]["attempts"] += 1
-        days[day]["correct"] += int(submission.is_correct)
-    return {"month": month_start.strftime('%Y-%m'), "days": [{"date": day, **values} for day, values in days.items()]}
+# ============================================================
+# ADMIN - STATISTICS
+# ============================================================
 
+@app.get("/api/admin/stats")
+def admin_stats(
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    now = local_naive_now()
 
-@app.get('/api/admin/dashboard')
-def admin_dashboard(_: models.User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    # basic stats: today quiz, expired quizzes, submissions
-    today = date.today()
-    today_quiz = db.query(models.Quiz).filter(
-        models.Quiz.date == today).first()
-    expired = db.query(models.Quiz).filter(
-        models.Quiz.expiry < datetime.utcnow()).count()
-    submissions = db.query(models.Submission).count()
-    return {"today_quiz": bool(today_quiz), "expired_count": expired, "submissions": submissions}
+    month_start = now.replace(
+        day=1,
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
 
+    month_end = (
+        month_start.replace(day=28)
+        + timedelta(days=4)
+    ).replace(day=1)
 
-@app.get('/api/admin/leaderboard')
-@app.get('/api/leaderboard')
-def leaderboard(month: str = None, page: int = 1, db: Session = Depends(get_db)):
-    if page < 1:
-        raise HTTPException(status_code=400, detail='Page must be at least 1')
-    if month:
-        try:
-            month_start = datetime.strptime(month, '%Y-%m')
-        except ValueError:
-            raise HTTPException(
-                status_code=400, detail='Month must use YYYY-MM format')
-        month_end = (month_start.replace(day=28) +
-                     timedelta(days=4)).replace(day=1)
-    else:
-        current = datetime.utcnow()
-        month_start = current.replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0)
-        month_end = (month_start.replace(day=28) +
-                     timedelta(days=4)).replace(day=1)
-
-    users = db.query(models.User).all()
-    result = []
-    for u in users:
-        submissions = db.query(models.Submission).filter(
-            models.Submission.user_id == u.id,
+    submissions = (
+        db.query(models.Submission)
+        .filter(
             models.Submission.submitted_at >= month_start,
             models.Submission.submitted_at < month_end,
-        ).all()
+        )
+        .all()
+    )
+
+    days = {}
+
+    current_day = month_start.date()
+
+    while current_day < month_end.date():
+        days[str(current_day)] = {
+            "attempts": 0,
+            "correct": 0,
+        }
+
+        current_day += timedelta(days=1)
+
+    for submission in submissions:
+        day = str(
+            submission.submitted_at.date()
+        )
+
+        if day not in days:
+            continue
+
+        days[day]["attempts"] += 1
+        days[day]["correct"] += int(
+            submission.is_correct
+        )
+
+    return {
+        "month": month_start.strftime("%Y-%m"),
+        "days": [
+            {
+                "date": day,
+                **values,
+            }
+            for day, values in days.items()
+        ],
+    }
+
+
+@app.get("/api/admin/dashboard")
+def admin_dashboard(
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    today = sri_lanka_today()
+    now = local_naive_now()
+
+    today_quiz = (
+        db.query(models.Quiz)
+        .filter(
+            models.Quiz.date == today,
+            models.Quiz.is_active == True,
+        )
+        .first()
+    )
+
+    expired = (
+        db.query(models.Quiz)
+        .filter(
+            models.Quiz.expiry < now
+        )
+        .count()
+    )
+
+    submissions = db.query(
+        models.Submission
+    ).count()
+
+    return {
+        "today_quiz": bool(today_quiz),
+        "expired_count": expired,
+        "submissions": submissions,
+    }
+
+
+# ============================================================
+# LEADERBOARD
+# ============================================================
+
+@app.get("/api/admin/leaderboard")
+@app.get("/api/leaderboard")
+def leaderboard(
+    month: str = None,
+    page: int = 1,
+    db: Session = Depends(get_db),
+):
+    if page < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Page must be at least 1",
+        )
+
+    if month:
+        try:
+            month_start = datetime.strptime(
+                month,
+                "%Y-%m",
+            )
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Month must use YYYY-MM format",
+            )
+
+        month_end = (
+            month_start.replace(day=28)
+            + timedelta(days=4)
+        ).replace(day=1)
+
+    else:
+        current = local_naive_now()
+
+        month_start = current.replace(
+            day=1,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+
+        month_end = (
+            month_start.replace(day=28)
+            + timedelta(days=4)
+        ).replace(day=1)
+
+    users = db.query(models.User).all()
+
+    result = []
+
+    for u in users:
+        submissions = (
+            db.query(models.Submission)
+            .filter(
+                models.Submission.user_id == u.id,
+                models.Submission.submitted_at >= month_start,
+                models.Submission.submitted_at < month_end,
+            )
+            .all()
+        )
+
         attempts = len(submissions)
+
         if attempts == 0:
             continue
 
         correct_submissions = [
-            submission for submission in submissions if submission.is_correct
+            submission
+            for submission in submissions
+            if submission.is_correct
         ]
+
         correct = len(correct_submissions)
 
-        # Earlier timestamp wins when monthly scores are equal.
-        # A later incorrect attempt must not change when a score was reached.
+        # Preserve the corrected ranking rule:
+        # when monthly scores are equal, the user who reached
+        # that score earlier ranks higher.
         score_reached_at = (
-            max(submission.submitted_at for submission in correct_submissions)
+            max(
+                submission.submitted_at
+                for submission
+                in correct_submissions
+            )
             if correct_submissions
-            else min(submission.submitted_at for submission in submissions)
+            else min(
+                submission.submitted_at
+                for submission
+                in submissions
+            )
         )
-        result.append({
-            "username": u.username,
-            "email": u.email,
-            "correct": correct,
-            "attempts": attempts,
-            "_score_reached_at": score_reached_at,
-            "_user_id": u.id,
-        })
 
-    result.sort(key=lambda entry: (
-        -entry["correct"],
-        entry["_score_reached_at"],
-        entry["_user_id"],
-    ))
-    for i, r in enumerate(result, start=1):
-        r['rank'] = i
-        del r["_score_reached_at"]
-        del r["_user_id"]
+        result.append(
+            {
+                "username": u.username,
+                "email": u.email,
+                "correct": correct,
+                "attempts": attempts,
+                "_score_reached_at": score_reached_at,
+                "_user_id": u.id,
+            }
+        )
+
+    result.sort(
+        key=lambda entry: (
+            -entry["correct"],
+            entry["_score_reached_at"],
+            entry["_user_id"],
+        )
+    )
+
+    for i, entry in enumerate(
+        result,
+        start=1,
+    ):
+        entry["rank"] = i
+        del entry["_score_reached_at"]
+        del entry["_user_id"]
+
     page_size = 10
     total_entries = len(result)
-    total_pages = max(1, (total_entries + page_size - 1) // page_size)
+
+    total_pages = max(
+        1,
+        (
+            total_entries
+            + page_size
+            - 1
+        )
+        // page_size,
+    )
+
     if page > total_pages:
         page = total_pages
-    start = (page - 1) * page_size
+
+    start = (
+        page - 1
+    ) * page_size
+
     return {
-        "leaderboard": result[start:start + page_size],
+        "leaderboard": result[
+            start:start + page_size
+        ],
         "page": page,
         "page_size": page_size,
         "total_entries": total_entries,

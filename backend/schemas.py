@@ -1,13 +1,27 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import List
-from datetime import datetime, date
+from datetime import date
 
 
 class UserCreate(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50)
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=50,
+    )
+
     email: EmailStr
-    whatsapp_number: str = Field(..., min_length=7, max_length=20)
-    password: str = Field(..., min_length=8)
+
+    whatsapp_number: str = Field(
+        ...,
+        min_length=7,
+        max_length=20,
+    )
+
+    password: str = Field(
+        ...,
+        min_length=8,
+    )
 
 
 class UserOut(BaseModel):
@@ -21,11 +35,24 @@ class UserOut(BaseModel):
 
 
 class QuizCreate(BaseModel):
-    question: str
-    options: List[str] = Field(..., min_items=4, max_items=4)
-    correct_index: int = Field(..., ge=0, le=3)
+    question: str = Field(
+        ...,
+        min_length=1,
+    )
+
+    options: List[str] = Field(
+        ...,
+        min_items=4,
+        max_items=4,
+    )
+
+    correct_index: int = Field(
+        ...,
+        ge=0,
+        le=3,
+    )
+
     date: date
-    expiry: datetime
 
 
 class QuizOut(BaseModel):
@@ -33,7 +60,6 @@ class QuizOut(BaseModel):
     question: str
     options: List[str]
     date: date
-    expiry: datetime
 
     class Config:
         orm_mode = True
@@ -41,4 +67,9 @@ class QuizOut(BaseModel):
 
 class SubmitAnswer(BaseModel):
     quiz_id: int
-    selected_index: int
+
+    selected_index: int = Field(
+        ...,
+        ge=0,
+        le=3,
+    )

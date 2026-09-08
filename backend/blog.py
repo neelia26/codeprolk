@@ -23,6 +23,7 @@ from database import Base, get_db
 
 MAX_IMAGE = 5 * 1024 * 1024
 MAX_BODY = 7 * 1024 * 1024 + 65536
+MAX_CAPTION = 12000
 
 
 class BlogPost(Base):
@@ -53,6 +54,30 @@ def post_json(post):
             tzinfo=timezone.utc
         ).isoformat(),
     }
+
+
+def clean_caption(value):
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or len(value.strip()) > MAX_CAPTION
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Caption must contain 1–12000 characters.",
+        )
+
+    caption = value.strip()
+    title = next(
+        (
+            line.strip()
+            for line in caption.splitlines()
+            if line.strip()
+        ),
+        "",
+    )[:160]
+
+    return caption, title
 
 
 def image_bytes(encoded):
@@ -108,7 +133,6 @@ def make_blog_router(require_admin):
                 detail="Page must be at least 1.",
             )
 
-        # Only the newest post is displayed.
         latest = (
             db.query(BlogPost)
             .order_by(
@@ -150,6 +174,24 @@ def make_blog_router(require_admin):
             },
         )
 
+    @router.get("/api/admin/blog/posts")
+    def admin_posts(
+        admin=Depends(require_admin),
+        db: Session = Depends(get_db),
+    ):
+        posts = (
+            db.query(BlogPost)
+            .order_by(
+                BlogPost.created_at.desc(),
+                BlogPost.id.desc(),
+            )
+            .all()
+        )
+
+        return {
+            "posts": [post_json(post) for post in posts]
+        }
+
     @router.post("/api/admin/blog/posts", status_code=201)
     async def publish(
         request: Request,
@@ -181,39 +223,16 @@ def make_blog_router(require_admin):
                 detail="Invalid post.",
             )
 
-        caption = data.get("caption")
-
-        if (
-            not isinstance(caption, str)
-            or not caption.strip()
-            or len(caption.strip()) > 12000
-        ):
-            raise HTTPException(
-                status_code=400,
-                detail="Caption must contain 1–12000 characters.",
-            )
-
-        caption = caption.strip()
-
-        # The first caption line becomes the post title and alt text.
-        title = next(
-            (
-                line.strip()
-                for line in caption.splitlines()
-                if line.strip()
-            ),
-            "",
-        )[:160]
-
+        caption, title = clean_caption(data.get("caption"))
         raw, mime = image_bytes(data.get("image_base64"))
 
         try:
-            # Prevent simultaneous publishes from interfering.
             db.execute(
                 text("SELECT pg_advisory_xact_lock(684217, 1)")
             )
 
-            # Remove every previous post, including its image and caption.
+            # Preserve the existing one-post blog behaviour.
+            # Publishing a new post replaces the previous one.
             db.query(BlogPost).delete(
                 synchronize_session=False
             )
@@ -231,12 +250,85 @@ def make_blog_router(require_admin):
             db.refresh(new_post)
 
             response_data = post_json(new_post)
-
-            # The deletion and new post are committed together.
             db.commit()
 
             return response_data
 
+        except Exception:
+            db.rollback()
+            raise
+
+    @router.put("/api/admin/blog/posts/{post_id}")
+    async def edit_post_caption(
+        post_id: int,
+        request: Request,
+        admin=Depends(require_admin),
+        db: Session = Depends(get_db),
+    ):
+        post = (
+            db.query(BlogPost)
+            .filter(BlogPost.id == post_id)
+            .first()
+        )
+
+        if not post:
+            raise HTTPException(
+                status_code=404,
+                detail="Post not found.",
+            )
+
+        try:
+            data = await request.json()
+        except (ValueError, json.JSONDecodeError):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid post.",
+            )
+
+        if not isinstance(data, dict):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid post.",
+            )
+
+        caption, title = clean_caption(data.get("caption"))
+
+        try:
+            post.caption = caption
+            post.title = title
+            post.image_alt = title
+            db.commit()
+            db.refresh(post)
+            return post_json(post)
+        except Exception:
+            db.rollback()
+            raise
+
+    @router.delete("/api/admin/blog/posts/{post_id}")
+    def delete_post(
+        post_id: int,
+        admin=Depends(require_admin),
+        db: Session = Depends(get_db),
+    ):
+        post = (
+            db.query(BlogPost)
+            .filter(BlogPost.id == post_id)
+            .first()
+        )
+
+        if not post:
+            raise HTTPException(
+                status_code=404,
+                detail="Post not found.",
+            )
+
+        try:
+            db.delete(post)
+            db.commit()
+            return {
+                "deleted": True,
+                "message": "Blog post deleted successfully.",
+            }
         except Exception:
             db.rollback()
             raise
