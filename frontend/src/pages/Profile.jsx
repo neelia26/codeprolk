@@ -192,7 +192,7 @@ export default function Profile() {
               <span className="profile-security-copy">
                 <small>ACCOUNT SECURITY</small>
                 <strong>Change password</strong>
-                <span>Only open this when you need to update your password.</span>
+                <span>Update your password whenever you need to.</span>
               </span>
               <span className="profile-security-arrow" aria-hidden="true">
                 {passwordOpen ? "−" : "+"}

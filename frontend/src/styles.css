@@ -9043,3 +9043,36 @@ body,
     padding: 0 1.15rem 1.25rem;
   }
 }
+
+
+/* =========================================================
+   PROFILE LAYOUT OVERRIDE
+   Keep the premium styling above; only place Change Password
+   underneath Profile Details.
+   ========================================================= */
+
+.profile-shell {
+  width: min(820px, 100%);
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.profile-grid > .profile-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.profile-security-card {
+  width: 100%;
+}
+
+@media (max-width: 850px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
