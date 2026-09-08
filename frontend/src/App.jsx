@@ -19,6 +19,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import QuizPage from "./pages/Quiz";
 import AdminPage from "./pages/Admin";
+import Blog from "./pages/Blog";
+import AdminBlog from "./pages/AdminBlog";
 import Leaderboard from "./pages/Leaderboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { getToken, getTokenPayload, logout } from "./utils/auth";
@@ -389,6 +391,7 @@ function SiteHeader({ menuOpen, setMenuOpen }) {
         <Link to="/services" onClick={() => setMenuOpen(false)}>
           SERVICES
         </Link>
+        <Link to="/blog" onClick={() => setMenuOpen(false)}>BLOG</Link>
         <Link to="/courses" onClick={() => setMenuOpen(false)}>
           COURSES
         </Link>
@@ -580,6 +583,7 @@ function App() {
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/blog" element={<Blog />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
@@ -597,7 +601,10 @@ function App() {
               path="/admin"
               element={
                 <ProtectedRoute requireAdmin>
+                  <>
+                  <AdminBlog />
                   <AdminPage />
+                  </>
                 </ProtectedRoute>
               }
             />

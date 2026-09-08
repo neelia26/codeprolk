@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 import os
 
 import models
+from blog import make_blog_router
 import schemas
 import auth
 from database import engine, get_db, migrate_users_table, Base
@@ -100,6 +101,9 @@ def get_admin_user(user: models.User = Depends(get_user_from_header)):
     if user.role != 'admin':
         raise HTTPException(status_code=403, detail='Forbidden')
     return user
+
+
+app.include_router(make_blog_router(get_admin_user))
 
 
 def deactivate_expired_quizzes(db: Session):
