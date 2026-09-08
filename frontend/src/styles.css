@@ -8356,11 +8356,11 @@ body,
 
 /* CodePRO LK Blog */
 .cp-blog { padding: clamp(3rem,7vw,6rem) 1.25rem; color:#d8e3f0; background:radial-gradient(ellipse at top left,rgba(56,189,248,.10),transparent 55%),#020617; }
-.cp-blog-inner { max-width:860px; margin:0 auto; }
+.cp-blog-inner { max-width:800px; margin:0 auto; }
 .cp-blog .cp-blog-heading { margin-bottom:3rem; }
 .cp-blog-tag { color:#8ec9e9; font-size:.78rem; letter-spacing:.18em; font-weight:600; margin:0 0 1rem; }
 .cp-blog h1 { font-family:'PP Neue Montreal Title',sans-serif; font-weight:300; font-size:clamp(2.5rem,6vw,4.8rem); color:#f8fafc; letter-spacing:-.04em; line-height:1.1; margin:0 0 1.5rem; }
-.cp-blog h1::after { content:""; display:block; width:min(320px,100%); height:2px; margin-top:1.6rem; background:linear-gradient(90deg,#718096,#f1f5f9,transparent); }
+.cp-blog h1::after { content:""; display:block; width:min(320px,100%); height:2px; margin-top:1.6rem; background:linear-gradient(90deg,rgba(113,128,150,.25) 0%,rgba(113,128,150,.4) 35%,#f1f5f9 50%,rgba(113,128,150,.4) 65%,rgba(113,128,150,.25) 100%); background-size:250% 100%; animation:cpBlogSilverSweep 3.2s ease-in-out infinite; }
 .cp-blog .cp-blog-heading > p:last-child { color:#aebdd0; line-height:1.6; }
 .cp-blog-feed { display:grid; gap:3rem; }
 .cp-blog .cp-blog-post { display:grid; grid-template-columns:minmax(0,1fr); overflow:hidden; border:1px solid #2a3d51; border-radius:22px; background:linear-gradient(145deg,#142234,#0b1524); box-shadow:0 20px 55px rgba(0,0,0,.18); }
@@ -8398,3 +8398,57 @@ body,
 .cp-blog-caption a:focus-visible { outline:2px solid #7dd3fc; outline-offset:4px; }
 .cp-blog-art img { max-height:none; }
 .cp-blog .cp-blog-copy h2 { line-height:1.45; letter-spacing:-.015em; }
+
+
+/* Current-page navigation and refined Leaderboard button */
+.site-header .site-nav a {
+  position: relative;
+}
+.site-header .site-nav a[aria-current="page"]:not(.leaderboard-link) {
+  color: #063c8c;
+  background: transparent;
+  box-shadow: none;
+}
+.site-header .site-nav a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: translateX(-50%);
+}
+.site-header .site-nav a.leaderboard-link {
+  color: #f5f9ff;
+  background: linear-gradient(140deg,#235bb7 0%,#0b3d91 55%,#082b66 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3),
+              inset 0 0 0 1px rgba(191,219,254,.3),
+              0 4px 10px rgba(6,31,98,.18);
+}
+.site-header .site-nav a.leaderboard-link:hover {
+  background: linear-gradient(140deg,#2b68c9,#104b9e 55%,#0a3277);
+}
+
+.site-header .site-nav a:focus-visible,
+.site-header .site-nav button:focus-visible {
+  outline: 2px solid #063c8c;
+  outline-offset: 3px;
+}
+/* Allow all links to remain reachable in the expanded mobile menu. */
+.site-header .site-nav.open {
+  max-height: min(70vh, 620px);
+  max-height: min(70dvh, 620px);
+  overflow-y: auto;
+}
+.site-header .site-nav.open > * { flex-shrink: 0; }
+
+
+@keyframes cpBlogSilverSweep {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-blog h1::after { animation: none; background-position: 50% 0; }
+}

@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Link,
+  NavLink,
   useNavigate,
 } from "react-router-dom";
 
@@ -385,47 +386,47 @@ function SiteHeader({ menuOpen, setMenuOpen }) {
       </button>
 
       <nav className={`site-nav ${menuOpen ? "open" : ""}`}>
-        <Link to="/" onClick={() => setMenuOpen(false)}>
+        <NavLink to="/" end onClick={() => setMenuOpen(false)}>
           HOME
-        </Link>
-        <Link to="/services" onClick={() => setMenuOpen(false)}>
+        </NavLink>
+        <NavLink to="/services" onClick={() => setMenuOpen(false)}>
           SERVICES
-        </Link>
-        <Link to="/blog" onClick={() => setMenuOpen(false)}>BLOG</Link>
-        <Link to="/courses" onClick={() => setMenuOpen(false)}>
+        </NavLink>
+        <NavLink to="/blog" onClick={() => setMenuOpen(false)}>BLOG</NavLink>
+        <NavLink to="/courses" onClick={() => setMenuOpen(false)}>
           COURSES
-        </Link>
-        <Link to="/about" onClick={() => setMenuOpen(false)}>
+        </NavLink>
+        <NavLink to="/about" onClick={() => setMenuOpen(false)}>
           ABOUT
-        </Link>
-        <Link to="/contact" onClick={() => setMenuOpen(false)}>
+        </NavLink>
+        <NavLink to="/contact" onClick={() => setMenuOpen(false)}>
           CONTACT
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           className="leaderboard-link"
           to="/leaderboard"
           onClick={() => setMenuOpen(false)}
         >
           LEADERBOARD
-        </Link>
+        </NavLink>
         {token && (
-          <Link to="/quiz" onClick={() => setMenuOpen(false)}>
+          <NavLink to="/quiz" onClick={() => setMenuOpen(false)}>
             QUIZ
-          </Link>
+          </NavLink>
         )}
         {isAdmin && (
-          <Link to="/admin" onClick={() => setMenuOpen(false)}>
+          <NavLink to="/admin" onClick={() => setMenuOpen(false)}>
             ADMIN
-          </Link>
+          </NavLink>
         )}
         {token ? (
           <button type="button" onClick={handleLogout}>
             LOGOUT
           </button>
         ) : (
-          <Link to="/login" onClick={() => setMenuOpen(false)}>
+          <NavLink to="/login" onClick={() => setMenuOpen(false)}>
             LOGIN
-          </Link>
+          </NavLink>
         )}
       </nav>
     </header>
