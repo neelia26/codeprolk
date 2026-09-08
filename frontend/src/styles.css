@@ -8109,3 +8109,175 @@ body,
 @keyframes authSilverRay { 0%,100% { transform: translateX(0); opacity: .25; } 50% { transform: translateX(255px); opacity: .95; } }
 @media (max-width: 600px) { .auth-surface { padding: 6.5rem 1rem 3.5rem; } .auth-surface .auth-page { padding: 1.6rem; border-radius: 1.35rem; } .auth-surface .auth-page h2 { font-size: clamp(2.4rem, 13vw, 3.5rem); } .auth-surface .auth-page h2::after { animation-duration: 3.8s; } }
 @media (prefers-reduced-motion: reduce) { .auth-surface .auth-page h2::after { animation: none; opacity: .7; } }
+
+/* Quiz answer feedback */
+
+.challenge-surface .quiz-page.quiz-feedback {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* Keep the result text and link above the confetti. */
+.quiz-feedback .quiz-feedback-copy,
+.quiz-feedback > .quiz-status-link {
+  position: relative;
+  z-index: 2;
+}
+
+.quiz-feedback .quiz-feedback-copy {
+  width: 100%;
+}
+
+.quiz-feedback .quiz-feedback-copy > p {
+  max-width: 540px;
+  margin: 1rem auto 1.5rem;
+  line-height: 1.7;
+}
+
+/* Correct answer: green confirmation and a brief pop. */
+.challenge-surface .quiz-feedback-correct {
+  border-color: rgba(110, 231, 183, 0.55);
+  animation: codeproQuizSuccessPop 450ms ease-out both;
+}
+
+.challenge-surface
+  .quiz-feedback-correct
+  .quiz-status-mark {
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(110, 231, 183, 0.55);
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.16);
+}
+
+/* Incorrect answer: red confirmation and one gentle shake. */
+.challenge-surface .quiz-feedback-incorrect {
+  border-color: rgba(248, 113, 113, 0.65);
+  animation: codeproQuizIncorrectShake 480ms ease-in-out both;
+}
+
+.challenge-surface
+  .quiz-feedback-incorrect
+  .quiz-status-mark {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(248, 113, 113, 0.65);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.18);
+}
+
+.challenge-surface
+  .quiz-feedback-incorrect
+  .quiz-feedback-copy > h2 {
+  color: #fecaca;
+}
+
+/* Confetti layer: decorative and never blocks clicks. */
+.quiz-feedback .quiz-confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.quiz-feedback .quiz-confetti > i {
+  position: absolute;
+  display: block;
+  top: -20px;
+  left: var(--x, 50%);
+  width: 8px;
+  height: 15px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: var(--color, #7dd3fc);
+  opacity: 0;
+  animation: codeproQuizConfettiFall 2400ms
+    cubic-bezier(0.22, 0.61, 0.36, 1)
+    var(--delay, 0s) both;
+}
+
+.quiz-feedback .quiz-confetti > i:nth-child(3n) {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.quiz-feedback .quiz-confetti > i:nth-child(4n) {
+  width: 5px;
+  height: 13px;
+}
+
+@keyframes codeproQuizConfettiFall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate3d(var(--drift, 0px), 650px, 0)
+      rotate(var(--spin, 480deg));
+  }
+}
+
+@keyframes codeproQuizSuccessPop {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.5;
+  }
+
+  65% {
+    transform: scale(1.015);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes codeproQuizIncorrectShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-6px);
+  }
+
+  40% {
+    transform: translateX(6px);
+  }
+
+  60% {
+    transform: translateX(-4px);
+  }
+
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Respect the user's device motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  .challenge-surface .quiz-page.quiz-feedback {
+    animation: none;
+  }
+
+  .quiz-feedback .quiz-confetti {
+    display: none;
+  }
+}

@@ -322,16 +322,40 @@ def leaderboard(month: str = None, page: int = 1, db: Session = Depends(get_db))
             models.Submission.submitted_at >= month_start,
             models.Submission.submitted_at < month_end,
         ).all()
-        correct = sum(submission.is_correct for submission in submissions)
         attempts = len(submissions)
         if attempts == 0:
             continue
-        result.append(
-            {"username": u.username, "email": u.email, "correct": correct, "attempts": attempts})
-    # sort by correct desc
-    result.sort(key=lambda x: x['correct'], reverse=True)
+
+        correct_submissions = [
+            submission for submission in submissions if submission.is_correct
+        ]
+        correct = len(correct_submissions)
+
+        # Earlier timestamp wins when monthly scores are equal.
+        # A later incorrect attempt must not change when a score was reached.
+        score_reached_at = (
+            max(submission.submitted_at for submission in correct_submissions)
+            if correct_submissions
+            else min(submission.submitted_at for submission in submissions)
+        )
+        result.append({
+            "username": u.username,
+            "email": u.email,
+            "correct": correct,
+            "attempts": attempts,
+            "_score_reached_at": score_reached_at,
+            "_user_id": u.id,
+        })
+
+    result.sort(key=lambda entry: (
+        -entry["correct"],
+        entry["_score_reached_at"],
+        entry["_user_id"],
+    ))
     for i, r in enumerate(result, start=1):
         r['rank'] = i
+        del r["_score_reached_at"]
+        del r["_user_id"]
     page_size = 10
     total_entries = len(result)
     total_pages = max(1, (total_entries + page_size - 1) // page_size)
