@@ -205,6 +205,105 @@ def get_user_from_header(
     return user
 
 
+
+# ============================================================
+# USER PROFILE
+# ============================================================
+
+@app.get("/api/profile")
+def get_profile(
+    user: models.User = Depends(get_user_from_header),
+):
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "whatsapp_number": user.whatsapp_number,
+        "role": user.role,
+    }
+
+
+@app.put("/api/profile")
+def update_profile(
+    data: dict,
+    user: models.User = Depends(get_user_from_header),
+    db: Session = Depends(get_db),
+):
+    username = str(data.get("username", "")).strip()
+    whatsapp_number = str(data.get("whatsapp_number", "")).strip()
+
+    if len(username) < 3 or len(username) > 50:
+        raise HTTPException(
+            status_code=400,
+            detail="Username must contain 3–50 characters.",
+        )
+
+    if len(whatsapp_number) < 7 or len(whatsapp_number) > 20:
+        raise HTTPException(
+            status_code=400,
+            detail="WhatsApp number must contain 7–20 characters.",
+        )
+
+    duplicate = db.query(models.User).filter(
+        models.User.username == username,
+        models.User.id != user.id,
+    ).first()
+
+    if duplicate:
+        raise HTTPException(
+            status_code=400,
+            detail="That username is already taken.",
+        )
+
+    user.username = username
+    user.whatsapp_number = whatsapp_number
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "whatsapp_number": user.whatsapp_number,
+        "role": user.role,
+    }
+
+
+@app.put("/api/profile/password")
+def update_profile_password(
+    data: dict,
+    user: models.User = Depends(get_user_from_header),
+    db: Session = Depends(get_db),
+):
+    current_password = data.get("current_password")
+    new_password = data.get("new_password")
+
+    if not isinstance(current_password, str) or not auth.verify_password(
+        current_password,
+        user.hashed_password,
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Current password is incorrect.",
+        )
+
+    if not isinstance(new_password, str) or len(new_password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="New password must contain at least 8 characters.",
+        )
+
+    if auth.verify_password(new_password, user.hashed_password):
+        raise HTTPException(
+            status_code=400,
+            detail="Choose a password different from your current password.",
+        )
+
+    user.hashed_password = auth.get_password_hash(new_password)
+    db.commit()
+
+    return {"ok": True}
+
 def get_admin_user(
     user: models.User = Depends(get_user_from_header),
 ):
@@ -544,72 +643,6 @@ def update_quiz(
         "date": str(quiz.date),
         "message": "Quiz updated successfully",
     }
-
-
-
-@app.delete("/api/admin/quiz/{quiz_id}")
-def delete_quiz(
-    quiz_id: int,
-    force: bool = False,
-    _: models.User = Depends(get_admin_user),
-    db: Session = Depends(get_db),
-):
-    quiz = db.query(models.Quiz).filter(
-        models.Quiz.id == quiz_id
-    ).first()
-
-    if not quiz:
-        raise HTTPException(
-            status_code=404,
-            detail="Quiz not found",
-        )
-
-    today = sri_lanka_today()
-
-    # Keep completed quizzes protected as historical records.
-    if quiz.date < today:
-        raise HTTPException(
-            status_code=400,
-            detail="Completed quizzes cannot be deleted.",
-        )
-
-    submission_count = (
-        db.query(models.Submission)
-        .filter(models.Submission.quiz_id == quiz_id)
-        .count()
-    )
-
-    # This is intentionally a normal 200 response, not an HTTP conflict.
-    # The frontend uses it to show the stronger confirmation popup.
-    if submission_count > 0 and not force:
-        return {
-            "deleted": False,
-            "requires_confirmation": True,
-            "submission_count": submission_count,
-            "message": (
-                f"This quiz has {submission_count} submission"
-                f"{'' if submission_count == 1 else 's'}."
-            ),
-        }
-
-    try:
-        if submission_count > 0:
-            db.query(models.Submission).filter(
-                models.Submission.quiz_id == quiz_id
-            ).delete(synchronize_session=False)
-
-        db.delete(quiz)
-        db.commit()
-
-        return {
-            "deleted": True,
-            "requires_confirmation": False,
-            "submission_count": submission_count,
-            "message": "Quiz deleted successfully.",
-        }
-    except Exception:
-        db.rollback()
-        raise
 
 
 # ============================================================

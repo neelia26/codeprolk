@@ -24,6 +24,7 @@ import Blog from "./pages/Blog";
 import AdminBlog from "./pages/AdminBlog";
 import Leaderboard from "./pages/Leaderboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Profile from "./pages/Profile";
 import { getToken, getTokenPayload, logout } from "./utils/auth";
 
 import logo from "./assests/logo.png";
@@ -359,12 +360,51 @@ function SiteHeader({ menuOpen, setMenuOpen }) {
   const navigate = useNavigate();
   const token = getToken();
   const isAdmin = getTokenPayload(token)?.role === "admin";
+  const [profile, setProfile] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  const loadProfile = async () => {
+    if (!token) {
+      setProfile(null);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) setProfile(await response.json());
+    } catch {
+      // Keep navigation usable even if the profile request temporarily fails.
+    }
+  };
+
+  useEffect(() => {
+    loadProfile();
+    const refresh = () => loadProfile();
+    window.addEventListener("codepro-profile-updated", refresh);
+    return () => window.removeEventListener("codepro-profile-updated", refresh);
+  }, [token]);
+
+  useEffect(() => {
+    const close = (event) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
 
   const handleLogout = () => {
     logout();
+    setProfileOpen(false);
     setMenuOpen(false);
     navigate("/login");
   };
+
+  const initials = (profile?.username || "U").trim().slice(0, 2).toUpperCase();
 
   return (
     <header className="site-header">
@@ -386,47 +426,64 @@ function SiteHeader({ menuOpen, setMenuOpen }) {
       </button>
 
       <nav className={`site-nav ${menuOpen ? "open" : ""}`}>
-        <NavLink to="/" end onClick={() => setMenuOpen(false)}>
-          HOME
-        </NavLink>
-        <NavLink to="/services" onClick={() => setMenuOpen(false)}>
-          SERVICES
-        </NavLink>
+        <NavLink to="/" end onClick={() => setMenuOpen(false)}>HOME</NavLink>
+        <NavLink to="/services" onClick={() => setMenuOpen(false)}>SERVICES</NavLink>
         <NavLink to="/blog" onClick={() => setMenuOpen(false)}>BLOG</NavLink>
-        <NavLink to="/courses" onClick={() => setMenuOpen(false)}>
-          COURSES
-        </NavLink>
-        <NavLink to="/about" onClick={() => setMenuOpen(false)}>
-          ABOUT
-        </NavLink>
-        <NavLink to="/contact" onClick={() => setMenuOpen(false)}>
-          CONTACT
-        </NavLink>
-        <NavLink
-          className="leaderboard-link"
-          to="/leaderboard"
-          onClick={() => setMenuOpen(false)}
-        >
+        <NavLink to="/courses" onClick={() => setMenuOpen(false)}>COURSES</NavLink>
+        <NavLink to="/about" onClick={() => setMenuOpen(false)}>ABOUT</NavLink>
+        <NavLink to="/contact" onClick={() => setMenuOpen(false)}>CONTACT</NavLink>
+        <NavLink className="leaderboard-link" to="/leaderboard" onClick={() => setMenuOpen(false)}>
           LEADERBOARD
         </NavLink>
+
         {token && (
-          <NavLink to="/quiz" onClick={() => setMenuOpen(false)}>
-            QUIZ
-          </NavLink>
+          <NavLink to="/quiz" onClick={() => setMenuOpen(false)}>QUIZ</NavLink>
         )}
+
         {isAdmin && (
-          <NavLink to="/admin" onClick={() => setMenuOpen(false)}>
-            ADMIN
-          </NavLink>
+          <NavLink to="/admin" onClick={() => setMenuOpen(false)}>ADMIN</NavLink>
         )}
+
         {token ? (
-          <button type="button" onClick={handleLogout}>
-            LOGOUT
-          </button>
+          <div className="profile-menu" ref={profileMenuRef}>
+            <button
+              type="button"
+              className="profile-avatar-button"
+              onClick={() => setProfileOpen((current) => !current)}
+              aria-label="Open profile menu"
+              aria-expanded={profileOpen}
+            >
+              {initials}
+            </button>
+
+            {profileOpen && (
+              <div className="profile-dropdown">
+                <div className="profile-dropdown-user">
+                  <span className="profile-dropdown-avatar">{initials}</span>
+                  <div>
+                    <strong>{profile?.username || "My account"}</strong>
+                    <small>{profile?.email || ""}</small>
+                  </div>
+                </div>
+
+                <NavLink
+                  to="/profile"
+                  onClick={() => {
+                    setProfileOpen(false);
+                    setMenuOpen(false);
+                  }}
+                >
+                  My Profile
+                </NavLink>
+
+                <button type="button" onClick={handleLogout}>
+                  Log out
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
-          <NavLink to="/login" onClick={() => setMenuOpen(false)}>
-            LOGIN
-          </NavLink>
+          <NavLink to="/login" onClick={() => setMenuOpen(false)}>LOGIN</NavLink>
         )}
       </nav>
     </header>
@@ -590,6 +647,14 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/quiz"
               element={
