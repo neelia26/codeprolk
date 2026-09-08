@@ -8281,3 +8281,75 @@ body,
     display: none;
   }
 }
+
+/* Append to the end of your existing src/styles.css. */
+.challenge-surface .quiz-review { position: relative; isolation: isolate; overflow: hidden; }
+.quiz-review > :not(.quiz-review-confetti) { position: relative; z-index: 1; }
+.quiz-review .quiz-review-question { line-height: 1.6; overflow-wrap: anywhere; }
+.quiz-review .quiz-review-options { list-style: none; padding: 0; margin: 1.5rem 0; }
+.quiz-review .quiz-review-options li { margin: 0 0 .8rem; }
+.challenge-surface .quiz-review .quiz-review-options label { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; text-transform: none; letter-spacing: normal; }
+.quiz-review-option-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.quiz-review .quiz-review-options input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; accent-color: #7dd3fc; }
+.quiz-review .quiz-review-options input:disabled { opacity: 1; }
+.challenge-surface .quiz-review .quiz-review-choice-correct { border-color: #6ee7b7; background: rgba(16,185,129,.13); }
+.challenge-surface .quiz-review .quiz-review-choice-incorrect { border-color: #f87171; background: rgba(239,68,68,.13); }
+.quiz-review-badge { font-size: .8rem; font-weight: 600; }
+.quiz-review-choice-correct .quiz-review-badge { color: #a7f3d0; }
+.quiz-review-choice-incorrect .quiz-review-badge { color: #fecaca; }
+.quiz-review-summary { border-top: 1px solid rgba(148,163,184,.25); padding-top: 1.5rem; }
+.quiz-review-summary > strong { font-size: 1.25rem; color: #e2e8f0; }
+.quiz-review-correct .quiz-review-summary > strong { color: #a7f3d0; }
+.quiz-review-incorrect .quiz-review-summary > strong { color: #fecaca; }
+.quiz-review-summary p { color: #c6d2e3; line-height: 1.65; }
+.quiz-review .quiz-review-locked { font-size: .9rem; margin: 1rem 0 1.5rem; }
+.quiz-review .quiz-status-link { display: inline-block; }
+.quiz-review-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.quiz-review-confetti i { position: absolute; top: -20px; left: var(--x); width: 8px; height: 14px; background: var(--color); border-radius: 2px; opacity: 0; animation: quizReviewFall 2.5s ease-out var(--delay) both; }
+.quiz-review-animate.quiz-review-incorrect { animation: quizReviewShake .48s ease-in-out; }
+.quiz-review-animate.quiz-review-correct { animation: quizReviewPop .4s ease-out; }
+@keyframes quizReviewFall { 0% { opacity: 0; transform: translate(0,0) rotate(0); } 10%,70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--drift),900px) rotate(480deg); } }
+@keyframes quizReviewShake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-5px); } 40%,80% { transform: translateX(5px); } }
+@keyframes quizReviewPop { from { transform: scale(.98); } to { transform: scale(1); } }
+@media (max-width: 600px) { .quiz-review-badge { flex-basis: 100%; padding-left: 1.9rem; } }
+@media (prefers-reduced-motion: reduce) { .quiz-review-confetti { display: none; } .quiz-review-animate.quiz-review-incorrect, .quiz-review-animate.quiz-review-correct { animation: none; } }
+
+
+/* Answer circles: correct option green, selected wrong option red. */
+.quiz-review .quiz-answer-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  border: 2px solid #8193aa;
+  border-radius: 50%;
+  color: #cbd5e1;
+  background: transparent;
+  font-family: Arial, sans-serif;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1;
+}
+.quiz-review .quiz-answer-circle-correct {
+  color: #06291c;
+  background: #6ee7b7;
+  border-color: #6ee7b7;
+}
+.quiz-review .quiz-answer-circle-incorrect {
+  color: white;
+  background: #dc244c;
+  border-color: #dc244c;
+  font-size: 26px;
+}
+.quiz-review .quiz-answer-circle-neutral {
+  color: #a7b4c6;
+  border-color: #8193aa;
+  font-size: 26px;
+}
+.challenge-surface .quiz-review .quiz-review-choice-neutral {
+  background: rgba(2,6,23,.24);
+  border-color: rgba(147,197,253,.22);
+}

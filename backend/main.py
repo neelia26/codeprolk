@@ -114,19 +114,40 @@ def deactivate_expired_quizzes(db: Session):
 def get_today_quiz(user: models.User = Depends(get_user_from_header), db: Session = Depends(get_db)):
     deactivate_expired_quizzes(db)
     today = date.today()
-    quiz = db.query(models.Quiz).filter(models.Quiz.date ==
-                                        today, models.Quiz.is_active == True).order_by(models.Quiz.id.desc()).first()
+    # Keep today's latest quiz available for reviewing an existing attempt.
+    quiz = db.query(models.Quiz).filter(
+        models.Quiz.date == today
+    ).order_by(models.Quiz.id.desc()).first()
     if not quiz:
         return {"quiz": None}
-    if quiz.expiry < datetime.utcnow():
-        return {"quiz": None, "expired": True}
+
     submitted = db.query(models.Submission).filter(
         models.Submission.user_id == user.id,
         models.Submission.quiz_id == quiz.id,
     ).first()
+
+    quiz_data = {
+        "id": quiz.id,
+        "question": quiz.question,
+        "options": quiz.options,
+        "date": str(quiz.date),
+        "expiry": quiz.expiry.isoformat(),
+    }
     if submitted:
-        return {"quiz": None, "submitted": True}
-    return {"quiz": {"id": quiz.id, "question": quiz.question, "options": quiz.options, "date": str(quiz.date), "expiry": quiz.expiry.isoformat()}}
+        return {
+            "quiz": quiz_data,
+            "submitted": True,
+            "submission": {
+                "selected_index": submitted.selected_index,
+                "is_correct": submitted.is_correct,
+                "correct_index": quiz.correct_index,
+            },
+        }
+    if quiz.expiry < datetime.utcnow():
+        return {"quiz": None, "expired": True}
+    if not quiz.is_active:
+        return {"quiz": None}
+    return {"quiz": quiz_data}
 
 
 @app.post('/api/quiz/submit')
@@ -166,7 +187,7 @@ def submit_answer(sub: schemas.SubmitAnswer, authorization: str = Header(None), 
         user_id=user.id, quiz_id=quiz.id, selected_index=sub.selected_index, is_correct=is_correct)
     db.add(submission)
     db.commit()
-    return {"ok": True, "is_correct": is_correct}
+    return {"ok": True, "is_correct": is_correct, "correct_index": quiz.correct_index}
 
 
 @app.post('/api/admin/quiz')
