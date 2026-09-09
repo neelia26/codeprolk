@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 from email.message import EmailMessage
 import hashlib
@@ -71,6 +71,13 @@ def local_naive_now():
     safely be compared with the existing PostgreSQL timestamp columns.
     """
     return sri_lanka_now().replace(tzinfo=None)
+
+
+def sri_lanka_timestamp(value: datetime):
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+
+    return value.astimezone(SRI_LANKA_TZ).isoformat()
 
 
 def password_reset_token_hash(token: str):
@@ -632,7 +639,7 @@ def quiz_comment_payload(comment, locked: bool = False):
         "body": comment.body,
         "locked": locked,
         "is_anonymous": is_anonymous,
-        "created_at": comment.created_at.isoformat(),
+        "created_at": sri_lanka_timestamp(comment.created_at),
         "user": {
             "id": None if is_anonymous else comment.user_id,
             "username": username,
@@ -1040,7 +1047,7 @@ def admin_quiz_comments(
                 "id": comment.id,
                 "body": comment.body,
                 "is_anonymous": comment.is_anonymous,
-                "created_at": comment.created_at.isoformat(),
+                "created_at": sri_lanka_timestamp(comment.created_at),
                 "quiz": {
                     "id": comment.quiz_id,
                     "date": str(comment.quiz.date) if comment.quiz else "",
