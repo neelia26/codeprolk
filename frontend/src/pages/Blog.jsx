@@ -6,19 +6,6 @@ function captionParts(caption) {
   return { heading: lines[0], body: lines.slice(1).join("\n").trim() };
 }
 
-function postDateParts(value) {
-  const date = new Date(value);
-  return {
-    month: date.toLocaleDateString(undefined, { month: "short" }).toUpperCase(),
-    day: date.toLocaleDateString(undefined, { day: "2-digit" }),
-    full: date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-  };
-}
-
 function CaptionText({ text }) {
   return text.split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
     /^https?:\/\//.test(part)
@@ -259,9 +246,9 @@ export default function Blog() {
                   className={`cp-blog-post ${expandedPostId === post.id ? "cp-blog-post-expanded" : ""}`}
                   key={post.id}
                 >
-                  <div className="cp-blog-date">
-                    <span>{postDateParts(post.created_at).month}</span>
-                    <strong>{postDateParts(post.created_at).day}</strong>
+                  <div className="cp-blog-index">
+                    <span>Post</span>
+                    <strong>{String(index + 1).padStart(2, "0")}</strong>
                   </div>
                   <div className="cp-blog-art">
                     <img src={post.image_url} alt={captionParts(post.caption).heading}
@@ -285,7 +272,7 @@ export default function Blog() {
                     )}
                     <div className="cp-blog-meta">
                       {index === 0 && <span>Latest post</span>}
-                      <time dateTime={post.created_at}>{postDateParts(post.created_at).full}</time>
+                      <span>CodePRO LK Journal</span>
                     </div>
                     {editingPostId === post.id ? (
                       <div className="cp-blog-inline-editor">

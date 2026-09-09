@@ -878,12 +878,24 @@ def update_quiz(
             ),
         )
 
+    previous_correct_index = quiz.correct_index
+
     quiz.question = q.question
     quiz.options = q.options
     quiz.correct_index = q.correct_index
     quiz.date = q.date
     quiz.expiry = quiz_expiry_for_date(q.date)
     quiz.is_active = True
+
+    if previous_correct_index != q.correct_index:
+        submissions = db.query(models.Submission).filter(
+            models.Submission.quiz_id == quiz.id
+        ).all()
+
+        for submission in submissions:
+            submission.is_correct = (
+                submission.selected_index == q.correct_index
+            )
 
     db.commit()
     db.refresh(quiz)
