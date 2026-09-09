@@ -12,6 +12,7 @@ import {
 
 import {
   getToken,
+  getTokenPayload,
 } from "../utils/auth";
 
 
@@ -85,6 +86,11 @@ export default function QuizPage() {
   ] = useState(false);
 
   const [
+    deletingCommentId,
+    setDeletingCommentId,
+  ] = useState(null);
+
+  const [
     anonymousComment,
     setAnonymousComment,
   ] = useState(false);
@@ -132,6 +138,11 @@ export default function QuizPage() {
       emojis: ["⏰", "📈", "📊", "🔐", "🛠️", "⚙️", "🖥️", "📱", "🌐", "☕", "🎧", "🏁"],
     },
   ];
+
+  const isAdmin =
+    getTokenPayload(
+      getToken(),
+    )?.role === "admin";
 
   const lockedPreviewComments = [
     {
@@ -567,6 +578,61 @@ export default function QuizPage() {
     };
 
 
+  const deleteComment =
+    async (comment) => {
+      if (!isAdmin || !window.confirm("Delete this comment?")) {
+        return;
+      }
+
+      setDeletingCommentId(comment.id);
+      setCommentMessage(null);
+
+      try {
+        const response =
+          await fetch(
+            `/api/admin/quiz-comments/${comment.id}`,
+            {
+              method:
+                "DELETE",
+              headers: {
+                Authorization:
+                  `Bearer ${getToken()}`,
+              },
+            },
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(
+              () => null,
+            );
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+              "Unable to delete comment.",
+          );
+        }
+
+        setComments(
+          (current) =>
+            current.filter(
+              (item) =>
+                item.id !== comment.id,
+            ),
+        );
+      } catch (error) {
+        setCommentMessage(
+          error.message ||
+            "Unable to delete comment.",
+        );
+      } finally {
+        setDeletingCommentId(null);
+      }
+    };
+
+
   /*
    * Load today's quiz when this route is opened.
    */
@@ -846,6 +912,24 @@ export default function QuizPage() {
                     "U"}
                 </span>
                 <div className="quiz-comment-bubble">
+                  {isAdmin &&
+                    !String(comment.id).startsWith("preview-") && (
+                      <button
+                        type="button"
+                        className="quiz-comment-delete"
+                        onClick={() =>
+                          deleteComment(comment)
+                        }
+                        disabled={
+                          deletingCommentId ===
+                          comment.id
+                        }
+                        title="Delete comment"
+                        aria-label="Delete comment"
+                      >
+                        🗑
+                      </button>
+                    )}
                   <div className="quiz-comment-meta">
                     <strong>
                       {comment.user?.username ||

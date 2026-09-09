@@ -1002,6 +1002,72 @@ def make_admin(
 
 
 # ============================================================
+# ADMIN - QUIZ COMMENT MODERATION
+# ============================================================
+
+@app.get("/api/admin/quiz-comments")
+def admin_quiz_comments(
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    comments = (
+        db.query(models.QuizComment)
+        .join(models.Quiz)
+        .join(models.User)
+        .order_by(
+            models.QuizComment.created_at.desc(),
+            models.QuizComment.id.desc(),
+        )
+        .limit(100)
+        .all()
+    )
+
+    return {
+        "comments": [
+            {
+                "id": comment.id,
+                "body": comment.body,
+                "is_anonymous": comment.is_anonymous,
+                "created_at": comment.created_at.isoformat(),
+                "quiz": {
+                    "id": comment.quiz_id,
+                    "date": str(comment.quiz.date) if comment.quiz else "",
+                    "question": comment.quiz.question if comment.quiz else "Deleted quiz",
+                },
+                "user": {
+                    "id": comment.user_id,
+                    "username": comment.user.username if comment.user else "Deleted user",
+                    "email": comment.user.email if comment.user else "",
+                },
+            }
+            for comment in comments
+        ],
+    }
+
+
+@app.delete("/api/admin/quiz-comments/{comment_id}")
+def delete_quiz_comment(
+    comment_id: int,
+    _: models.User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+):
+    comment = db.query(models.QuizComment).filter(
+        models.QuizComment.id == comment_id
+    ).first()
+
+    if not comment:
+        raise HTTPException(
+            status_code=404,
+            detail="Comment not found",
+        )
+
+    db.delete(comment)
+    db.commit()
+
+    return {"ok": True}
+
+
+# ============================================================
 # ADMIN - STATISTICS
 # ============================================================
 

@@ -293,10 +293,6 @@ export default function AdminPage() {
     .filter((quiz) => quiz.status === "scheduled")
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date));
-  const completedQuizzes = quizzes
-    .filter((quiz) => quiz.status === "completed")
-    .slice()
-    .sort((a, b) => b.date.localeCompare(a.date));
 
   const quizActions = (quiz) => (
     <span className="admin-row-actions">
@@ -315,7 +311,11 @@ export default function AdminPage() {
 
   return (
     <div className="admin-page">
-      <h2>Admin Dashboard</h2>
+      <div className="admin-hero">
+        <p className="admin-kicker">CODEPRO LK / CONTROL ROOM</p>
+        <h2>Admin Dashboard</h2>
+        <p>Schedule quizzes, manage members, publish the latest post, and watch the current month’s quiz performance.</p>
+      </div>
 
       <section className="admin-section">
         <h3>{editingQuizId ? "Edit Quiz" : "Schedule a Quiz"}</h3>
@@ -434,24 +434,6 @@ export default function AdminPage() {
       </section>
 
       <section className="admin-section">
-        <h3>Quiz History</h3>
-        {loading ? (
-          <p>Loading…</p>
-        ) : completedQuizzes.length === 0 ? (
-          <p>No previous quizzes yet.</p>
-        ) : (
-          completedQuizzes.map((quiz) => (
-            <div className="admin-list-row" key={quiz.id}>
-              <span>
-                <strong>{quiz.question}</strong>{" "}
-                <small>{quiz.date} · Completed</small>
-              </span>
-            </div>
-          ))
-        )}
-      </section>
-
-      <section className="admin-section">
         <h3>Users</h3>
         <input
           placeholder="Search username or email"
@@ -504,14 +486,20 @@ export default function AdminPage() {
 
       <section className="admin-section">
         <h3>Current Month Statistics</h3>
-        <div className="admin-stats-grid">
-          {stats.map((day) => (
-            <div key={day.date}>
-              <strong>{day.date.slice(8)}</strong>
-              <span>{day.attempts} attempts</span>
-              <span>{day.correct} correct</span>
-            </div>
-          ))}
+        <div className="admin-stats-grid" aria-label="Daily quiz statistics">
+          {stats.length === 0 ? (
+            <p>No quiz activity has been recorded this month.</p>
+          ) : (
+            stats.map((day) => {
+              return (
+                <div key={day.date}>
+                  <strong>{day.date.slice(8)}</strong>
+                  <span>{day.attempts} attempts</span>
+                  <span>{day.correct} correct</span>
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
     </div>
