@@ -90,7 +90,14 @@ def send_password_reset_email(email: str, reset_url: str):
     smtp_tls = os.getenv("SMTP_TLS", "true").lower() != "false"
 
     if not smtp_host:
-        print(f"Password reset link for {email}: {reset_url}")
+        if os.getenv("APP_ENV", "development") == "production":
+            print("Password reset email not sent: SMTP_HOST is not configured.")
+        else:
+            print(f"Password reset link for {email}: {reset_url}")
+        return False
+
+    if not smtp_username or not smtp_password:
+        print("Password reset email not sent: SMTP_USERNAME or SMTP_PASSWORD is missing.")
         return False
 
     message = EmailMessage()
@@ -104,18 +111,22 @@ def send_password_reset_email(email: str, reset_url: str):
         "If you did not request this, you can safely ignore this email."
     )
 
-    with smtplib.SMTP(smtp_host, smtp_port) as server:
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
         if smtp_tls:
             server.starttls()
-        if smtp_username and smtp_password:
-            server.login(smtp_username, smtp_password)
+        server.login(smtp_username, smtp_password)
         server.send_message(message)
 
+    print(f"Password reset email sent to {email} via {smtp_host}:{smtp_port}.")
     return True
 
 
 @app.on_event("startup")
 def startup_event():
+    if os.getenv("SMTP_HOST"):
+        print(f"SMTP configured for password reset: {os.getenv('SMTP_HOST')}:{os.getenv('SMTP_PORT', '587')}")
+    else:
+        print("SMTP not configured. Password reset emails will not be delivered.")
     create_default_admin()
 
 
@@ -596,6 +607,126 @@ def submit_answer(
         "ok": True,
         "is_correct": is_correct,
         "correct_index": quiz.correct_index,
+    }
+
+
+def has_quiz_submission(
+    db: Session,
+    user_id: int,
+    quiz_id: int,
+):
+    return db.query(models.Submission).filter(
+        models.Submission.user_id == user_id,
+        models.Submission.quiz_id == quiz_id,
+    ).first() is not None
+
+
+def comment_payload(comment: models.QuizComment, locked: bool = False):
+    is_anonymous = bool(comment.is_anonymous)
+    username = "Anonymous" if is_anonymous else (
+        comment.user.username if comment.user else "Member"
+    )
+
+    return {
+        "id": comment.id,
+        "body": comment.body,
+        "locked": locked,
+        "is_anonymous": is_anonymous,
+        "created_at": comment.created_at.isoformat(),
+        "user": {
+            "id": None if is_anonymous else comment.user_id,
+            "username": username,
+            "initials": username.strip()[:2].upper() or "U",
+        },
+    }
+
+
+@app.get("/api/quiz/{quiz_id}/comments")
+def get_quiz_comments(
+    quiz_id: int,
+    user: models.User = Depends(get_user_from_header),
+    db: Session = Depends(get_db),
+):
+    quiz = db.query(models.Quiz).filter(
+        models.Quiz.id == quiz_id
+    ).first()
+
+    if not quiz:
+        raise HTTPException(
+            status_code=404,
+            detail="Quiz not found",
+        )
+
+    can_comment = has_quiz_submission(db, user.id, quiz_id)
+
+    comments = (
+        db.query(models.QuizComment)
+        .filter(models.QuizComment.quiz_id == quiz_id)
+        .order_by(models.QuizComment.created_at.asc(), models.QuizComment.id.asc())
+        .limit(100)
+        .all()
+    )
+
+    return {
+        "can_comment": can_comment,
+        "comments": [
+            comment_payload(comment, locked=not can_comment)
+            for comment in comments
+        ],
+    }
+
+
+@app.post("/api/quiz/{quiz_id}/comments")
+def create_quiz_comment(
+    quiz_id: int,
+    data: dict,
+    user: models.User = Depends(get_user_from_header),
+    db: Session = Depends(get_db),
+):
+    quiz = db.query(models.Quiz).filter(
+        models.Quiz.id == quiz_id
+    ).first()
+
+    if not quiz:
+        raise HTTPException(
+            status_code=404,
+            detail="Quiz not found",
+        )
+
+    if not has_quiz_submission(db, user.id, quiz_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Submit the quiz before commenting.",
+        )
+
+    body = str(data.get("body", "")).strip()
+    is_anonymous = bool(data.get("is_anonymous", False))
+
+    if len(body) < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Comment cannot be empty.",
+        )
+
+    if len(body) > 500:
+        raise HTTPException(
+            status_code=400,
+            detail="Comment must be 500 characters or fewer.",
+        )
+
+    comment = models.QuizComment(
+        quiz_id=quiz_id,
+        user_id=user.id,
+        body=body,
+        is_anonymous=is_anonymous,
+    )
+
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
+
+    return {
+        "comment": comment_payload(comment),
     }
 
 
