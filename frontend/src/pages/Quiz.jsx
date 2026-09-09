@@ -60,6 +60,46 @@ export default function QuizPage() {
   ] = useState(false);
 
   const [
+    comments,
+    setComments,
+  ] = useState([]);
+
+  const [
+    commentsLoading,
+    setCommentsLoading,
+  ] = useState(false);
+
+  const [
+    commentBody,
+    setCommentBody,
+  ] = useState("");
+
+  const [
+    commentMessage,
+    setCommentMessage,
+  ] = useState(null);
+
+  const [
+    commentSubmitting,
+    setCommentSubmitting,
+  ] = useState(false);
+
+  const [
+    anonymousComment,
+    setAnonymousComment,
+  ] = useState(false);
+
+  const [
+    emojiPickerOpen,
+    setEmojiPickerOpen,
+  ] = useState(false);
+
+  const [
+    liveIndex,
+    setLiveIndex,
+  ] = useState(0);
+
+  const [
     animate,
     setAnimate,
   ] = useState(false);
@@ -69,6 +109,59 @@ export default function QuizPage() {
 
   const lastLoadedDate =
     useRef(null);
+
+  const emojiGroups = [
+    {
+      label: "Reactions",
+      emojis: ["😀", "😄", "😂", "🤣", "😊", "😍", "🤩", "😮", "🤔", "😅", "😎", "🤯"],
+    },
+    {
+      label: "Hands",
+      emojis: ["👏", "🙌", "👍", "👎", "👌", "🤝", "🙏", "✌️", "👀", "💪", "🫡", "🫶"],
+    },
+    {
+      label: "Learning",
+      emojis: ["💡", "🧠", "📚", "✍️", "📝", "🎯", "🔍", "🧩", "📌", "📖", "🧪", "💻"],
+    },
+    {
+      label: "Energy",
+      emojis: ["🔥", "💯", "✨", "⚡", "🚀", "⭐", "🏆", "🎉", "✅", "❌", "❤️", "💙"],
+    },
+    {
+      label: "Objects",
+      emojis: ["⏰", "📈", "📊", "🔐", "🛠️", "⚙️", "🖥️", "📱", "🌐", "☕", "🎧", "🏁"],
+    },
+  ];
+
+  const lockedPreviewComments = [
+    {
+      id: "preview-1",
+      body: "That option was trickier than it looked.",
+      created_at: "2026-01-01T00:00:00",
+      user: {
+        username: "Member",
+        initials: "M",
+      },
+    },
+    {
+      id: "preview-2",
+      body: "I almost picked the same answer.",
+      created_at: "2026-01-01T00:01:00",
+      user: {
+        username: "Anonymous",
+        initials: "AN",
+      },
+    },
+    {
+      id: "preview-3",
+      body: "The explanation is going to be useful today.",
+      created_at: "2026-01-01T00:02:00",
+      user: {
+        username: "Member",
+        initials: "M",
+      },
+    },
+  ];
 
 
   const resultOf = (
@@ -102,6 +195,31 @@ export default function QuizPage() {
           "0",
         ),
       ].join("-");
+    };
+
+
+  const formatCommentTime =
+    (value) => {
+      const date =
+        new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return "";
+      }
+
+      return date.toLocaleString(
+        undefined,
+        {
+          month:
+            "short",
+          day:
+            "numeric",
+          hour:
+            "numeric",
+          minute:
+            "2-digit",
+        },
+      );
     };
 
 
@@ -171,6 +289,11 @@ export default function QuizPage() {
           );
 
           setAnimate(false);
+          setComments([]);
+          setCommentBody("");
+          setCommentMessage(null);
+          setEmojiPickerOpen(false);
+          setLiveIndex(0);
 
           if (
             data.submitted &&
@@ -220,6 +343,228 @@ export default function QuizPage() {
       },
       [],
     );
+
+
+  const loadComments =
+    useCallback(
+      async () => {
+        if (!quiz?.id) {
+          setComments([]);
+          return;
+        }
+
+        setCommentsLoading(true);
+
+        try {
+          const response =
+            await fetch(
+              `/api/quiz/${quiz.id}/comments`,
+              {
+                headers: {
+                  Authorization:
+                    `Bearer ${getToken()}`,
+                },
+                cache:
+                  "no-store",
+              },
+            );
+
+          const data =
+            await response
+              .json()
+              .catch(
+                () => null,
+              );
+
+          if (!response.ok) {
+            throw new Error(
+              typeof data?.detail ===
+                "string"
+                ? data.detail
+                : "Unable to load comments.",
+            );
+          }
+
+          setComments(
+            Array.isArray(
+              data.comments,
+            )
+              ? data.comments
+              : [],
+          );
+        } catch (error) {
+          setCommentMessage(
+            error.message ||
+              "Unable to load comments.",
+          );
+        } finally {
+          setCommentsLoading(false);
+        }
+      },
+      [
+        quiz?.id,
+      ],
+    );
+
+
+  useEffect(() => {
+    if (quiz?.id) {
+      loadComments();
+    }
+  }, [
+    quiz?.id,
+    submitted,
+    loadComments,
+  ]);
+
+
+  useEffect(() => {
+    if (!quiz?.id || !submitted) {
+      return undefined;
+    }
+
+    const intervalId =
+      window.setInterval(
+        loadComments,
+        7000,
+      );
+
+    return () =>
+      window.clearInterval(
+        intervalId,
+      );
+  }, [
+    quiz?.id,
+    submitted,
+    loadComments,
+  ]);
+
+
+  useEffect(() => {
+    const poolLength =
+      comments.length ||
+      lockedPreviewComments.length;
+
+    if (poolLength < 2) {
+      setLiveIndex(0);
+      return undefined;
+    }
+
+    const intervalId =
+      window.setInterval(
+        () => {
+          setLiveIndex(
+            (current) =>
+              (current + 1) %
+              poolLength,
+          );
+        },
+        submitted
+          ? 5500
+          : 5500,
+      );
+
+    return () =>
+      window.clearInterval(
+        intervalId,
+      );
+  }, [
+    comments.length,
+    submitted,
+  ]);
+
+  const addEmoji =
+    (emoji) => {
+      setCommentBody(
+        (current) =>
+          `${current}${current ? " " : ""}${emoji}`,
+      );
+    };
+
+
+  const submitComment =
+    async (event) => {
+      event.preventDefault();
+
+      if (!submitted) {
+        setCommentMessage(
+          "Take the quiz first to unlock comments.",
+        );
+        return;
+      }
+
+      const body =
+        commentBody.trim();
+
+      if (!body || !quiz?.id) {
+        setCommentMessage(
+          "Write a comment before posting.",
+        );
+        return;
+      }
+
+      setCommentSubmitting(true);
+      setCommentMessage(null);
+
+      try {
+        const response =
+          await fetch(
+            `/api/quiz/${quiz.id}/comments`,
+            {
+              method:
+                "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+                Authorization:
+                  `Bearer ${getToken()}`,
+              },
+              body:
+                JSON.stringify({
+                  body,
+                  is_anonymous:
+                    anonymousComment,
+                }),
+            },
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(
+              () => null,
+            );
+
+        if (!response.ok) {
+          throw new Error(
+            typeof data?.detail ===
+              "string"
+              ? data.detail
+              : "Unable to post comment.",
+          );
+        }
+
+        if (data?.comment) {
+          setComments(
+            (current) => [
+              ...current,
+              data.comment,
+            ],
+          );
+          setLiveIndex(0);
+        }
+
+        setCommentBody("");
+        setEmojiPickerOpen(false);
+      } catch (error) {
+        setCommentMessage(
+          error.message ||
+            "Unable to post comment.",
+        );
+      } finally {
+        setCommentSubmitting(false);
+      }
+    };
 
 
   /*
@@ -403,6 +748,260 @@ export default function QuizPage() {
     };
 
 
+  const liveComments =
+    comments.length
+      ? [
+          ...comments.slice(
+            liveIndex,
+          ),
+          ...comments.slice(
+            0,
+            liveIndex,
+          ),
+        ].reverse()
+      : [];
+
+  const visibleLiveComments =
+    liveComments.length
+      ? liveComments
+      : submitted
+        ? []
+        : [
+            ...lockedPreviewComments.slice(
+              liveIndex,
+            ),
+            ...lockedPreviewComments.slice(
+              0,
+              liveIndex,
+            ),
+          ];
+
+  const commentPanel = quiz && (
+    <aside
+      className={`quiz-live-panel ${
+        submitted
+          ? "quiz-live-panel-open"
+          : "quiz-live-panel-locked"
+      }`}
+      aria-labelledby="quiz-live-title"
+    >
+      <div className="quiz-live-head">
+        <span className="quiz-live-dot" />
+        <div>
+          <p className="quiz-live-kicker">
+            Live comments
+          </p>
+          <h3 id="quiz-live-title">
+            Quiz room
+          </h3>
+        </div>
+        <span className="quiz-live-pill">
+          {submitted
+            ? "Open"
+            : "Locked"}
+        </span>
+      </div>
+
+      {!submitted && (
+        <button
+          type="button"
+          className="quiz-live-lock"
+          onClick={() =>
+            setCommentMessage(
+              "Take the quiz first to unlock comments.",
+            )
+          }
+        >
+          Take the quiz first
+        </button>
+      )}
+
+      <div className="quiz-live-stream">
+        {commentsLoading &&
+        visibleLiveComments.length ===
+          0 ? (
+          <p className="quiz-comments-empty">
+            Loading comments...
+          </p>
+        ) : visibleLiveComments.length ===
+          0 ? (
+          <p className="quiz-comments-empty">
+            Waiting for the first reaction.
+          </p>
+        ) : (
+          visibleLiveComments.map(
+            (
+              comment,
+              index,
+            ) => (
+              <article
+                className="quiz-live-comment"
+                key={comment.id}
+                style={{
+                  "--delay": `${index * 90}ms`,
+                }}
+              >
+                <span className="quiz-comment-avatar">
+                  {comment.user?.initials ||
+                    "U"}
+                </span>
+                <div className="quiz-comment-bubble">
+                  <div className="quiz-comment-meta">
+                    <strong>
+                      {comment.user?.username ||
+                        "Member"}
+                    </strong>
+                    <time dateTime={comment.created_at}>
+                      {formatCommentTime(
+                        comment.created_at,
+                      )}
+                    </time>
+                  </div>
+                  <p>
+                    {comment.body}
+                  </p>
+                </div>
+              </article>
+            ),
+          )
+        )}
+      </div>
+
+      {!submitted ? (
+        <p className="quiz-live-hint">
+          Preview stays locked until your quiz attempt is submitted.
+        </p>
+      ) : (
+        <form
+          className="quiz-comment-form"
+          onSubmit={submitComment}
+        >
+          <label htmlFor="quiz-comment-body">
+            Add your thought
+          </label>
+          <textarea
+            id="quiz-comment-body"
+            value={commentBody}
+            onChange={(event) =>
+              setCommentBody(
+                event.target.value,
+              )
+            }
+            maxLength={500}
+            rows={3}
+            placeholder="React, ask, or share what clicked for you."
+            disabled={commentSubmitting}
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                !event.shiftKey
+              ) {
+                event.preventDefault();
+                submitComment(event);
+              }
+            }}
+          />
+
+          <div className="quiz-comment-tools">
+            <button
+              type="button"
+              className="quiz-emoji-trigger"
+              onClick={() =>
+                setEmojiPickerOpen(
+                  (current) => !current,
+                )
+              }
+              aria-expanded={emojiPickerOpen}
+              aria-controls="quiz-emoji-picker"
+            >
+              ☺
+            </button>
+
+            <span>
+              Add emoji
+            </span>
+          </div>
+
+          {emojiPickerOpen && (
+            <div
+              className="quiz-emoji-picker"
+              id="quiz-emoji-picker"
+            >
+              {emojiGroups.map(
+                (group) => (
+                  <section key={group.label}>
+                    <p>
+                      {group.label}
+                    </p>
+                    <div className="quiz-emoji-grid">
+                      {group.emojis.map(
+                        (emoji) => (
+                          <button
+                            type="button"
+                            key={`${group.label}-${emoji}`}
+                            onClick={() =>
+                              addEmoji(emoji)
+                            }
+                            aria-label={`Add ${emoji}`}
+                          >
+                            {emoji}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  </section>
+                ),
+              )}
+            </div>
+          )}
+
+          <label className="quiz-anonymous-toggle">
+            <input
+              type="checkbox"
+              checked={anonymousComment}
+              onChange={(event) =>
+                setAnonymousComment(
+                  event.target.checked,
+                )
+              }
+            />
+            <span>
+              Post anonymously
+            </span>
+          </label>
+
+          <div className="quiz-comment-actions">
+            <span>
+              {commentBody.trim().length}
+              /500
+            </span>
+            <button
+              type="submit"
+              disabled={
+                commentSubmitting ||
+                !commentBody.trim()
+              }
+            >
+              {commentSubmitting
+                ? "Posting..."
+                : "Post"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {commentMessage && (
+        <p
+          className="quiz-comment-message"
+          role="alert"
+        >
+          {commentMessage}
+        </p>
+      )}
+    </aside>
+  );
+
+
   if (
     loading ||
     !quiz
@@ -440,17 +1039,20 @@ export default function QuizPage() {
 
   return (
     <section className="challenge-surface">
-      <div
-        className={`quiz-page quiz-review ${
-          submitted
-            ? `quiz-review-${result}`
-            : ""
-        } ${
-          animate
-            ? "quiz-review-animate"
-            : ""
-        }`}
-      >
+      <div className="quiz-live-layout">
+        {commentPanel}
+
+        <div
+          className={`quiz-page quiz-review ${
+            submitted
+              ? `quiz-review-${result}`
+              : ""
+          } ${
+            animate
+              ? "quiz-review-animate"
+              : ""
+          }`}
+        >
         {animate &&
           result ===
             "correct" && (
@@ -714,6 +1316,7 @@ export default function QuizPage() {
             {message}
           </p>
         )}
+        </div>
       </div>
     </section>
   );

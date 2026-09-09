@@ -49,6 +49,28 @@ def migrate_users_table():
             "UPDATE quizzes SET is_active = FALSE WHERE id <> "
             "(SELECT id FROM quizzes ORDER BY id DESC LIMIT 1)"
         ))
+        connection.execute(text(
+            "CREATE TABLE IF NOT EXISTS quiz_comments ("
+            "id SERIAL PRIMARY KEY, "
+            "quiz_id INTEGER NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE, "
+            "user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, "
+            "body TEXT NOT NULL, "
+            "is_anonymous BOOLEAN NOT NULL DEFAULT FALSE, "
+            "created_at TIMESTAMP NOT NULL DEFAULT NOW()"
+            ")"
+        ))
+        connection.execute(text(
+            "ALTER TABLE quiz_comments ADD COLUMN IF NOT EXISTS "
+            "is_anonymous BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        connection.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_quiz_comments_quiz_id "
+            "ON quiz_comments (quiz_id)"
+        ))
+        connection.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_quiz_comments_user_id "
+            "ON quiz_comments (user_id)"
+        ))
 
 
 def get_db():

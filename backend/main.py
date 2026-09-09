@@ -610,7 +610,7 @@ def submit_answer(
     }
 
 
-def has_quiz_submission(
+def user_has_quiz_submission(
     db: Session,
     user_id: int,
     quiz_id: int,
@@ -621,7 +621,7 @@ def has_quiz_submission(
     ).first() is not None
 
 
-def comment_payload(comment: models.QuizComment, locked: bool = False):
+def quiz_comment_payload(comment, locked: bool = False):
     is_anonymous = bool(comment.is_anonymous)
     username = "Anonymous" if is_anonymous else (
         comment.user.username if comment.user else "Member"
@@ -657,20 +657,20 @@ def get_quiz_comments(
             detail="Quiz not found",
         )
 
-    can_comment = has_quiz_submission(db, user.id, quiz_id)
+    can_comment = user_has_quiz_submission(db, user.id, quiz_id)
 
     comments = (
         db.query(models.QuizComment)
         .filter(models.QuizComment.quiz_id == quiz_id)
         .order_by(models.QuizComment.created_at.asc(), models.QuizComment.id.asc())
-        .limit(100)
+        .limit(80)
         .all()
     )
 
     return {
         "can_comment": can_comment,
         "comments": [
-            comment_payload(comment, locked=not can_comment)
+            quiz_comment_payload(comment, locked=not can_comment)
             for comment in comments
         ],
     }
@@ -693,14 +693,13 @@ def create_quiz_comment(
             detail="Quiz not found",
         )
 
-    if not has_quiz_submission(db, user.id, quiz_id):
+    if not user_has_quiz_submission(db, user.id, quiz_id):
         raise HTTPException(
             status_code=403,
-            detail="Submit the quiz before commenting.",
+            detail="Take the quiz first to unlock comments.",
         )
 
     body = str(data.get("body", "")).strip()
-    is_anonymous = bool(data.get("is_anonymous", False))
 
     if len(body) < 1:
         raise HTTPException(
@@ -718,7 +717,7 @@ def create_quiz_comment(
         quiz_id=quiz_id,
         user_id=user.id,
         body=body,
-        is_anonymous=is_anonymous,
+        is_anonymous=bool(data.get("is_anonymous", False)),
     )
 
     db.add(comment)
@@ -726,9 +725,8 @@ def create_quiz_comment(
     db.refresh(comment)
 
     return {
-        "comment": comment_payload(comment),
+        "comment": quiz_comment_payload(comment),
     }
-
 
 # ============================================================
 # ADMIN - QUIZZES

@@ -18,6 +18,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     submissions = relationship('Submission', back_populates='user')
+    quiz_comments = relationship('QuizComment', back_populates='user')
 
 
 class Quiz(Base):
@@ -32,6 +33,7 @@ class Quiz(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     submissions = relationship('Submission', back_populates='quiz')
+    comments = relationship('QuizComment', back_populates='quiz')
 
 
 class Submission(Base):
@@ -45,3 +47,16 @@ class Submission(Base):
 
     user = relationship('User', back_populates='submissions')
     quiz = relationship('Quiz', back_populates='submissions')
+
+
+class QuizComment(Base):
+    __tablename__ = 'quiz_comments'
+    id = Column(Integer, primary_key=True, index=True)
+    quiz_id = Column(Integer, ForeignKey('quizzes.id'), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    body = Column(Text, nullable=False)
+    is_anonymous = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    quiz = relationship('Quiz', back_populates='comments')
+    user = relationship('User', back_populates='quiz_comments')
