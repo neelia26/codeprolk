@@ -6,6 +6,19 @@ function captionParts(caption) {
   return { heading: lines[0], body: lines.slice(1).join("\n").trim() };
 }
 
+function postDateParts(value) {
+  const date = new Date(value);
+  return {
+    month: date.toLocaleDateString(undefined, { month: "short" }).toUpperCase(),
+    day: date.toLocaleDateString(undefined, { day: "2-digit" }),
+    full: date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+  };
+}
+
 function CaptionText({ text }) {
   return text.split(/(https?:\/\/[^\s]+)/g).map((part, index) =>
     /^https?:\/\//.test(part)
@@ -23,8 +36,12 @@ export default function Blog() {
   const [editingPostId, setEditingPostId] = useState(null);
   const [editingCaption, setEditingCaption] = useState("");
   const [busyPostId, setBusyPostId] = useState(null);
+  const [expandedPostId, setExpandedPostId] = useState(null);
   const token = getToken();
   const isAdmin = getTokenPayload(token)?.role === "admin";
+  const heroPost = data.posts[0];
+  const heroTitle = heroPost ? captionParts(heroPost.caption).heading : "CodePRO LK Blog";
+  const heroImage = heroPost?.image_url;
 
   const loadPosts = (signal) => {
     setLoading(true);
@@ -122,12 +139,22 @@ export default function Blog() {
 
   return (
     <section className="cp-blog">
+      <header
+        className="cp-blog-hero"
+        style={heroImage ? { backgroundImage: `linear-gradient(180deg, rgba(2,6,23,.28), rgba(2,6,23,.72)), url(${heroImage})` } : undefined}
+      >
+        <div className="cp-blog-hero-inner">
+          <p className="cp-blog-tag">CODEPRO LK / JOURNAL</p>
+          <h1>BLOG</h1>
+          <p>{heroTitle}</p>
+        </div>
+      </header>
+
       <div className="cp-blog-inner">
-        <header className="cp-blog-heading">
-          <p className="cp-blog-tag">CODEPRO LK / BLOG</p>
-          <h1>Ideas worth sharing.</h1>
-          <p>Fresh perspectives on AI, technology, and learning.</p>
-        </header>
+        <div className="cp-blog-section-title">
+          <h2>Latest Posts</h2>
+          <span>{data.posts.length ? "List" : "Empty"}</span>
+        </div>
         {message && <p className="cp-blog-admin-message" role="status">{message}</p>}
         {loading ? <p role="status">Loading posts…</p> : error ? (
           <p role="alert">{error}</p>
@@ -138,6 +165,10 @@ export default function Blog() {
             <div className="cp-blog-feed">
               {data.posts.map((post, index) => (
                 <article className="cp-blog-post" key={post.id}>
+                  <div className="cp-blog-date">
+                    <span>{postDateParts(post.created_at).month}</span>
+                    <strong>{postDateParts(post.created_at).day}</strong>
+                  </div>
                   <div className="cp-blog-art">
                     <img src={post.image_url} alt={captionParts(post.caption).heading}
                       loading={index === 0 ? "eager" : "lazy"} />
@@ -160,11 +191,7 @@ export default function Blog() {
                     )}
                     <div className="cp-blog-meta">
                       {page === 1 && index === 0 && <span>Latest post</span>}
-                      <time dateTime={post.created_at}>
-                        {new Date(post.created_at).toLocaleDateString(undefined, {
-                          year: "numeric", month: "long", day: "numeric",
-                        })}
-                      </time>
+                      <time dateTime={post.created_at}>{postDateParts(post.created_at).full}</time>
                     </div>
                     {editingPostId === post.id ? (
                       <div className="cp-blog-inline-editor">
@@ -192,7 +219,18 @@ export default function Blog() {
                     ) : (
                       <>
                         <h2>{captionParts(post.caption).heading}</h2>
-                        <p className="cp-blog-caption"><CaptionText text={captionParts(post.caption).body} /></p>
+                        <p className={`cp-blog-caption ${expandedPostId === post.id ? "expanded" : ""}`}>
+                          <CaptionText text={captionParts(post.caption).body} />
+                        </p>
+                        {captionParts(post.caption).body && (
+                          <button
+                            className="cp-blog-read-more"
+                            type="button"
+                            onClick={() => setExpandedPostId(expandedPostId === post.id ? null : post.id)}
+                          >
+                            {expandedPostId === post.id ? "Show less" : "Read post"}
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -209,6 +247,12 @@ export default function Blog() {
           </>
         )}
       </div>
+      <footer
+        className="cp-blog-closing"
+        style={heroImage ? { backgroundImage: `linear-gradient(180deg, rgba(2,6,23,.72), rgba(2,6,23,.84)), url(${heroImage})` } : undefined}
+      >
+        <p>Learn deeply. Build boldly. Share generously.</p>
+      </footer>
     </section>
   );
 }

@@ -46,8 +46,15 @@ def migrate_users_table():
             "NOT NULL DEFAULT TRUE"
         ))
         connection.execute(text(
-            "UPDATE quizzes SET is_active = FALSE WHERE id <> "
-            "(SELECT id FROM quizzes ORDER BY id DESC LIMIT 1)"
+            "UPDATE quizzes SET is_active = TRUE WHERE date >= CURRENT_DATE"
+        ))
+        connection.execute(text(
+            "UPDATE quizzes older SET is_active = FALSE "
+            "WHERE older.id NOT IN ("
+            "SELECT DISTINCT ON (date) id FROM quizzes "
+            "WHERE is_active = TRUE "
+            "ORDER BY date, id DESC"
+            ")"
         ))
         connection.execute(text(
             "CREATE TABLE IF NOT EXISTS quiz_comments ("

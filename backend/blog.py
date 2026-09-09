@@ -24,6 +24,7 @@ from database import Base, get_db
 MAX_IMAGE = 5 * 1024 * 1024
 MAX_BODY = 7 * 1024 * 1024 + 65536
 MAX_CAPTION = 12000
+PUBLIC_PAGE_SIZE = 3
 
 
 class BlogPost(Base):
@@ -133,19 +134,25 @@ def make_blog_router(require_admin):
                 detail="Page must be at least 1.",
             )
 
-        latest = (
+        total = db.query(BlogPost).count()
+        posts_query = (
             db.query(BlogPost)
             .order_by(
                 BlogPost.created_at.desc(),
                 BlogPost.id.desc(),
             )
-            .first()
+        )
+        posts = (
+            posts_query
+            .offset((page - 1) * PUBLIC_PAGE_SIZE)
+            .limit(PUBLIC_PAGE_SIZE)
+            .all()
         )
 
         return {
-            "posts": [post_json(latest)] if latest else [],
-            "page": 1,
-            "total_pages": 1,
+            "posts": [post_json(post) for post in posts],
+            "page": page,
+            "total_pages": max(1, (total + PUBLIC_PAGE_SIZE - 1) // PUBLIC_PAGE_SIZE),
         }
 
     @router.get("/api/blog/posts/{post_id}/image")
@@ -229,12 +236,6 @@ def make_blog_router(require_admin):
         try:
             db.execute(
                 text("SELECT pg_advisory_xact_lock(684217, 1)")
-            )
-
-            # Preserve the existing one-post blog behaviour.
-            # Publishing a new post replaces the previous one.
-            db.query(BlogPost).delete(
-                synchronize_session=False
             )
 
             new_post = BlogPost(
