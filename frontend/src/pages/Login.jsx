@@ -72,6 +72,10 @@ export default function Login() {
         {error && <p className="error" role="alert">{error}</p>}
 
         <p className="auth-page-footer">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
+
+        <p className="auth-page-footer">
           New user? <Link to="/register">Create an account</Link>
         </p>
       </div>

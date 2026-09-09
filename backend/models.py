@@ -12,6 +12,8 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     whatsapp_number = Column(String(20), nullable=True)
     hashed_password = Column(String, nullable=False)
+    password_reset_token_hash = Column(String, nullable=True, index=True)
+    password_reset_expires_at = Column(DateTime, nullable=True)
     role = Column(String, default='user')
     created_at = Column(DateTime, default=datetime.utcnow)
 

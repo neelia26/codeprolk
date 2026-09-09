@@ -1,9 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from datetime import datetime, date, time, timedelta
 from zoneinfo import ZoneInfo
+from email.message import EmailMessage
+import hashlib
 import os
+import secrets
+import smtplib
 
 import models
 from blog import make_blog_router
@@ -38,6 +43,7 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 SRI_LANKA_TZ = ZoneInfo("Asia/Colombo")
+PASSWORD_RESET_TOKEN_MINUTES = int(os.getenv("PASSWORD_RESET_TOKEN_MINUTES", "30"))
 
 
 def sri_lanka_now():
@@ -65,6 +71,47 @@ def local_naive_now():
     safely be compared with the existing PostgreSQL timestamp columns.
     """
     return sri_lanka_now().replace(tzinfo=None)
+
+
+def password_reset_token_hash(token: str):
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def frontend_url():
+    return os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+
+
+def send_password_reset_email(email: str, reset_url: str):
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_username = os.getenv("SMTP_USERNAME")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM", smtp_username or "no-reply@codeprolk.com")
+    smtp_tls = os.getenv("SMTP_TLS", "true").lower() != "false"
+
+    if not smtp_host:
+        print(f"Password reset link for {email}: {reset_url}")
+        return False
+
+    message = EmailMessage()
+    message["Subject"] = "Reset your Codepro LK password"
+    message["From"] = smtp_from
+    message["To"] = email
+    message.set_content(
+        "We received a request to reset your Codepro LK password.\n\n"
+        f"Use this link within {PASSWORD_RESET_TOKEN_MINUTES} minutes:\n"
+        f"{reset_url}\n\n"
+        "If you did not request this, you can safely ignore this email."
+    )
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        if smtp_tls:
+            server.starttls()
+        if smtp_username and smtp_password:
+            server.login(smtp_username, smtp_password)
+        server.send_message(message)
+
+    return True
 
 
 @app.on_event("startup")
@@ -160,6 +207,80 @@ def login(
         "token_type": "bearer",
         "role": user.role,
     }
+
+
+@app.post("/api/auth/forgot-password")
+def forgot_password(
+    data: dict,
+    db: Session = Depends(get_db),
+):
+    email = str(data.get("email", "")).strip().lower()
+
+    if email:
+        user = db.query(models.User).filter(
+            func.lower(models.User.email) == email
+        ).first()
+
+        if user:
+            token = secrets.token_urlsafe(32)
+            user.password_reset_token_hash = password_reset_token_hash(token)
+            user.password_reset_expires_at = (
+                datetime.utcnow() + timedelta(minutes=PASSWORD_RESET_TOKEN_MINUTES)
+            )
+            db.commit()
+
+            reset_url = f"{frontend_url()}/reset-password?token={token}"
+            try:
+                send_password_reset_email(user.email, reset_url)
+            except Exception as exc:
+                print(f"Unable to send password reset email to {user.email}: {exc}")
+
+    return {
+        "ok": True,
+        "message": "If an account exists for that email, a reset link has been sent.",
+    }
+
+
+@app.post("/api/auth/reset-password")
+def reset_password(
+    data: dict,
+    db: Session = Depends(get_db),
+):
+    token = data.get("token")
+    new_password = data.get("password")
+
+    if not isinstance(token, str) or not token.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Reset token is required.",
+        )
+
+    if not isinstance(new_password, str) or len(new_password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must contain at least 8 characters.",
+        )
+
+    user = db.query(models.User).filter(
+        models.User.password_reset_token_hash == password_reset_token_hash(token)
+    ).first()
+
+    if (
+        not user
+        or not user.password_reset_expires_at
+        or user.password_reset_expires_at < datetime.utcnow()
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="This reset link is invalid or has expired.",
+        )
+
+    user.hashed_password = auth.get_password_hash(new_password)
+    user.password_reset_token_hash = None
+    user.password_reset_expires_at = None
+    db.commit()
+
+    return {"ok": True}
 
 
 def get_user_from_header(

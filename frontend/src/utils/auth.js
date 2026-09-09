@@ -3,7 +3,12 @@ export function setToken(token) {
 }
 
 export function getToken() {
-  return localStorage.getItem("token");
+  const token = localStorage.getItem("token");
+  if (token && isTokenExpired(token)) {
+    logout();
+    return null;
+  }
+  return token;
 }
 
 export function logout() {
@@ -21,4 +26,10 @@ export function getTokenPayload(token) {
   } catch (e) {
     return null;
   }
+}
+
+export function isTokenExpired(token) {
+  const payload = getTokenPayload(token);
+  if (!payload?.exp) return false;
+  return payload.exp * 1000 <= Date.now();
 }

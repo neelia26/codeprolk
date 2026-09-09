@@ -1,5 +1,6 @@
 import os
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from database import SessionLocal
 from models import User
@@ -15,11 +16,20 @@ def create_default_admin():
         admin_password = os.getenv("ADMIN_PASSWORD")
         admin_role = os.getenv("ADMIN_ROLE")
 
+        if not admin_username or not admin_email or not admin_password:
+            print("Default admin not created: admin environment variables are incomplete.")
+            return
+
         existing_admin = db.query(User).filter(
-            User.email == admin_email).first()
+            or_(
+                User.email == admin_email,
+                User.username == admin_username,
+            )
+        ).first()
 
         if existing_admin:
             existing_admin.username = admin_username
+            existing_admin.email = admin_email
             existing_admin.role = admin_role
             db.commit()
             print("Default admin already exists. Admin role checked/updated.")

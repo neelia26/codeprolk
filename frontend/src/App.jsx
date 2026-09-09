@@ -17,6 +17,8 @@ import Services from "./pages/Services";
 import JourneyRoadmap from "./components/JourneyRoadmap";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Register from "./pages/Register";
 import QuizPage from "./pages/Quiz";
 import AdminPage from "./pages/Admin";
@@ -374,6 +376,11 @@ function SiteHeader({ menuOpen, setMenuOpen }) {
       const response = await fetch("/api/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (response.status === 401) {
+        logout();
+        setProfile(null);
+        return;
+      }
       if (response.ok) setProfile(await response.json());
     } catch {
       // Keep navigation usable even if the profile request temporarily fails.
@@ -645,6 +652,8 @@ function App() {
             <Route path="/courses" element={<Courses />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/register" element={<Register />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route

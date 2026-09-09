@@ -30,6 +30,18 @@ def migrate_users_table():
             "whatsapp_number VARCHAR(20)"
         ))
         connection.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS "
+            "password_reset_token_hash VARCHAR"
+        ))
+        connection.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS "
+            "password_reset_expires_at TIMESTAMP"
+        ))
+        connection.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_users_password_reset_token_hash "
+            "ON users (password_reset_token_hash)"
+        ))
+        connection.execute(text(
             "ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS is_active BOOLEAN "
             "NOT NULL DEFAULT TRUE"
         ))
