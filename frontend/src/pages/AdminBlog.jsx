@@ -2,6 +2,23 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { getToken } from "../utils/auth";
 
+function validateImage(chosen) {
+  return (
+    chosen &&
+    ["image/jpeg", "image/png", "image/webp"].includes(chosen.type) &&
+    chosen.size <= 5 * 1024 * 1024
+  );
+}
+
+function encodeImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1]);
+    reader.onerror = () => reject(new Error("Unable to read this image."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AdminBlog() {
   const [caption, setCaption] = useState("");
   const [file, setFile] = useState(null);
@@ -35,10 +52,7 @@ export default function AdminBlog() {
       return;
     }
 
-    if (
-      !["image/jpeg", "image/png", "image/webp"].includes(chosen.type) ||
-      chosen.size > 5 * 1024 * 1024
-    ) {
+    if (!validateImage(chosen)) {
       setError("Choose a PNG, JPEG or WebP image up to 5 MB.");
       event.target.value = "";
       setFile(null);
@@ -59,12 +73,7 @@ export default function AdminBlog() {
     setMessage("");
 
     try {
-      const encoded = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result).split(",")[1]);
-        reader.onerror = () => reject(new Error("Unable to read this image."));
-        reader.readAsDataURL(file);
-      });
+      const encoded = await encodeImage(file);
 
       const response = await fetch("/api/admin/blog/posts", {
         method: "POST",
@@ -95,7 +104,7 @@ export default function AdminBlog() {
         fileInput.current.value = "";
       }
 
-      setMessage("Published! Your post is now first on the Blog page.");
+      setMessage("Published! Your post is now first on the Blog page. If there were already three posts, the oldest one was removed.");
     } catch (e) {
       setError(
         e.message ||
@@ -112,7 +121,7 @@ export default function AdminBlog() {
       <header>
         <p className="cp-blog-tag">CODEPRO LK / PUBLISH</p>
         <h2>Share a new post</h2>
-        <p>Add your image and caption. The first line becomes the post heading.</p>
+        <p>Add your image and caption. The first line becomes the post heading. The Blog page keeps the latest three posts only.</p>
         <Link to="/blog">View Blog →</Link>
       </header>
 

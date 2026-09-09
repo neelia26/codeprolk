@@ -25,6 +25,7 @@ MAX_IMAGE = 5 * 1024 * 1024
 MAX_BODY = 7 * 1024 * 1024 + 65536
 MAX_CAPTION = 12000
 PUBLIC_PAGE_SIZE = 3
+BLOG_ASSET_KEYS = {"hero", "closing"}
 
 
 class BlogPost(Base):
@@ -44,6 +45,20 @@ class BlogPost(Base):
     )
 
 
+class BlogAsset(Base):
+    __tablename__ = "blog_assets"
+
+    key = Column(String(40), primary_key=True)
+    image_type = Column(String(30), nullable=False)
+    image_data = deferred(Column(LargeBinary, nullable=False))
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+
 def post_json(post):
     return {
         "id": post.id,
@@ -54,6 +69,14 @@ def post_json(post):
         "created_at": post.created_at.replace(
             tzinfo=timezone.utc
         ).isoformat(),
+    }
+
+
+def asset_json(asset):
+    return {
+        "key": asset.key,
+        "image_url": f"/api/blog/assets/{asset.key}/image",
+        "updated_at": asset.updated_at.replace(tzinfo=timezone.utc).isoformat(),
     }
 
 
@@ -134,25 +157,35 @@ def make_blog_router(require_admin):
                 detail="Page must be at least 1.",
             )
 
-        total = db.query(BlogPost).count()
-        posts_query = (
+        posts = (
             db.query(BlogPost)
             .order_by(
                 BlogPost.created_at.desc(),
                 BlogPost.id.desc(),
             )
-        )
-        posts = (
-            posts_query
-            .offset((page - 1) * PUBLIC_PAGE_SIZE)
             .limit(PUBLIC_PAGE_SIZE)
             .all()
         )
 
         return {
             "posts": [post_json(post) for post in posts],
-            "page": page,
-            "total_pages": max(1, (total + PUBLIC_PAGE_SIZE - 1) // PUBLIC_PAGE_SIZE),
+            "page": 1,
+            "total_pages": 1,
+        }
+
+    @router.get("/api/blog/assets")
+    def assets(db: Session = Depends(get_db)):
+        stored_assets = (
+            db.query(BlogAsset)
+            .filter(BlogAsset.key.in_(BLOG_ASSET_KEYS))
+            .all()
+        )
+
+        return {
+            "assets": {
+                asset.key: asset_json(asset)
+                for asset in stored_assets
+            }
         }
 
     @router.get("/api/blog/posts/{post_id}/image")
@@ -175,6 +208,38 @@ def make_blog_router(require_admin):
         return Response(
             content=post.image_data,
             media_type=post.image_type,
+            headers={
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "public, max-age=3600",
+            },
+        )
+
+    @router.get("/api/blog/assets/{asset_key}/image")
+    def asset_image(
+        asset_key: str,
+        db: Session = Depends(get_db),
+    ):
+        if asset_key not in BLOG_ASSET_KEYS:
+            raise HTTPException(
+                status_code=404,
+                detail="Asset not found.",
+            )
+
+        asset = (
+            db.query(BlogAsset)
+            .filter(BlogAsset.key == asset_key)
+            .first()
+        )
+
+        if not asset:
+            raise HTTPException(
+                status_code=404,
+                detail="Asset not found.",
+            )
+
+        return Response(
+            content=asset.image_data,
+            media_type=asset.image_type,
             headers={
                 "X-Content-Type-Options": "nosniff",
                 "Cache-Control": "public, max-age=3600",
@@ -250,11 +315,77 @@ def make_blog_router(require_admin):
             db.flush()
             db.refresh(new_post)
 
+            old_posts = (
+                db.query(BlogPost)
+                .filter(BlogPost.id != new_post.id)
+                .order_by(BlogPost.created_at.desc(), BlogPost.id.desc())
+                .offset(PUBLIC_PAGE_SIZE - 1)
+                .all()
+            )
+
+            for old_post in old_posts:
+                db.delete(old_post)
+
             response_data = post_json(new_post)
             db.commit()
 
             return response_data
 
+        except Exception:
+            db.rollback()
+            raise
+
+    @router.put("/api/admin/blog/assets/{asset_key}")
+    async def update_asset(
+        asset_key: str,
+        request: Request,
+        admin=Depends(require_admin),
+        db: Session = Depends(get_db),
+    ):
+        if asset_key not in BLOG_ASSET_KEYS:
+            raise HTTPException(
+                status_code=404,
+                detail="Asset not found.",
+            )
+
+        try:
+            data = await request.json()
+        except (ValueError, json.JSONDecodeError):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid asset.",
+            )
+
+        if not isinstance(data, dict):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid asset.",
+            )
+
+        raw, mime = image_bytes(data.get("image_base64"))
+
+        asset = (
+            db.query(BlogAsset)
+            .filter(BlogAsset.key == asset_key)
+            .first()
+        )
+
+        try:
+            if asset:
+                asset.image_data = raw
+                asset.image_type = mime
+                asset.updated_at = datetime.utcnow()
+            else:
+                asset = BlogAsset(
+                    key=asset_key,
+                    image_data=raw,
+                    image_type=mime,
+                )
+                db.add(asset)
+
+            db.commit()
+            db.refresh(asset)
+            return asset_json(asset)
         except Exception:
             db.rollback()
             raise

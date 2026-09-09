@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { getToken, getTokenPayload } from "../utils/auth";
 
 function captionParts(caption) {
@@ -27,9 +27,26 @@ function CaptionText({ text }) {
   );
 }
 
+function validBlogImage(file) {
+  return (
+    file &&
+    ["image/jpeg", "image/png", "image/webp"].includes(file.type) &&
+    file.size <= 5 * 1024 * 1024
+  );
+}
+
+function encodeImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1]);
+    reader.onerror = () => reject(new Error("Unable to read this image."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function Blog() {
-  const [page, setPage] = useState(1);
   const [data, setData] = useState({ posts: [], total_pages: 1 });
+  const [assets, setAssets] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -37,21 +54,35 @@ export default function Blog() {
   const [editingCaption, setEditingCaption] = useState("");
   const [busyPostId, setBusyPostId] = useState(null);
   const [expandedPostId, setExpandedPostId] = useState(null);
+  const [assetBusy, setAssetBusy] = useState("");
+  const heroInputRef = useRef(null);
+  const closingInputRef = useRef(null);
   const token = getToken();
   const isAdmin = getTokenPayload(token)?.role === "admin";
   const heroPost = data.posts[0];
   const heroTitle = heroPost ? captionParts(heroPost.caption).heading : "CodePRO LK Blog";
-  const heroImage = heroPost?.image_url;
+  const heroImage = assets.hero?.image_url;
+  const closingImage = assets.closing?.image_url;
 
   const loadPosts = (signal) => {
     setLoading(true);
     setError("");
-    return fetch(`/api/blog/posts?page=${page}`, { signal })
+    return Promise.all([
+      fetch("/api/blog/posts?page=1", { signal }),
+      fetch("/api/blog/assets", { signal }),
+    ])
       .then(async (r) => {
-        if (!r.ok) throw new Error("Unable to load posts. Please refresh to try again.");
-        return r.json();
+        const [postsResponse, assetsResponse] = r;
+        if (!postsResponse.ok) throw new Error("Unable to load posts. Please refresh to try again.");
+        if (!assetsResponse.ok) throw new Error("Unable to load blog images. Please refresh to try again.");
+        return Promise.all([postsResponse.json(), assetsResponse.json()]);
       })
-      .then((value) => { if (!signal?.aborted) setData(value); })
+      .then(([postsValue, assetsValue]) => {
+        if (!signal?.aborted) {
+          setData(postsValue);
+          setAssets(assetsValue.assets || {});
+        }
+      })
       .catch((e) => { if (!signal?.aborted) setError(e.message); })
       .finally(() => { if (!signal?.aborted) setLoading(false); });
   };
@@ -60,7 +91,7 @@ export default function Blog() {
     const controller = new AbortController();
     loadPosts(controller.signal);
     return () => controller.abort();
-  }, [page]);
+  }, []);
 
   const beginEdit = (post) => {
     setEditingPostId(post.id);
@@ -137,12 +168,72 @@ export default function Blog() {
     }
   };
 
+  const updateSectionImage = async (key, file) => {
+    if (!validBlogImage(file)) {
+      setError("Choose a PNG, JPEG or WebP image up to 5 MB.");
+      return;
+    }
+
+    setAssetBusy(key);
+    setError("");
+    setMessage("");
+
+    try {
+      const encoded = await encodeImage(file);
+      const response = await fetch(`/api/admin/blog/assets/${key}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image_base64: encoded }),
+      });
+      const body = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(body?.detail || "Unable to update blog image.");
+      }
+
+      setAssets((current) => ({ ...current, [key]: body }));
+      setMessage(key === "hero" ? "Top blog image updated." : "Bottom blog image updated.");
+    } catch (e) {
+      setError(e.message || "Unable to update blog image.");
+    } finally {
+      setAssetBusy("");
+    }
+  };
+
   return (
     <section className="cp-blog">
       <header
-        className="cp-blog-hero"
+        className={`cp-blog-hero ${!heroImage ? "cp-blog-hero-empty" : ""}`}
         style={heroImage ? { backgroundImage: `linear-gradient(180deg, rgba(2,6,23,.28), rgba(2,6,23,.72)), url(${heroImage})` } : undefined}
       >
+        {isAdmin && (
+          <>
+            <input
+              ref={heroInputRef}
+              className="cp-blog-section-file"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => {
+                const selected = event.target.files?.[0];
+                if (selected) updateSectionImage("hero", selected);
+                event.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              className="cp-blog-section-camera"
+              onClick={() => heroInputRef.current?.click()}
+              disabled={assetBusy === "hero"}
+              title="Change top blog image"
+              aria-label="Change top blog image"
+            >
+              {assetBusy === "hero" ? "..." : "⌾"}
+            </button>
+          </>
+        )}
         <div className="cp-blog-hero-inner">
           <p className="cp-blog-tag">CODEPRO LK / JOURNAL</p>
           <h1>BLOG</h1>
@@ -164,7 +255,10 @@ export default function Blog() {
           <>
             <div className="cp-blog-feed">
               {data.posts.map((post, index) => (
-                <article className="cp-blog-post" key={post.id}>
+                <article
+                  className={`cp-blog-post ${expandedPostId === post.id ? "cp-blog-post-expanded" : ""}`}
+                  key={post.id}
+                >
                   <div className="cp-blog-date">
                     <span>{postDateParts(post.created_at).month}</span>
                     <strong>{postDateParts(post.created_at).day}</strong>
@@ -190,7 +284,7 @@ export default function Blog() {
                       </div>
                     )}
                     <div className="cp-blog-meta">
-                      {page === 1 && index === 0 && <span>Latest post</span>}
+                      {index === 0 && <span>Latest post</span>}
                       <time dateTime={post.created_at}>{postDateParts(post.created_at).full}</time>
                     </div>
                     {editingPostId === post.id ? (
@@ -237,20 +331,38 @@ export default function Blog() {
                 </article>
               ))}
             </div>
-            {data.total_pages > 1 && (
-              <nav className="cp-blog-pagination" aria-label="Blog pages">
-                <button disabled={page <= 1} onClick={() => setPage(page - 1)}>Newer posts</button>
-                <span>Page {data.page} of {data.total_pages}</span>
-                <button disabled={page >= data.total_pages} onClick={() => setPage(page + 1)}>Older posts</button>
-              </nav>
-            )}
           </>
         )}
       </div>
       <footer
-        className="cp-blog-closing"
-        style={heroImage ? { backgroundImage: `linear-gradient(180deg, rgba(2,6,23,.72), rgba(2,6,23,.84)), url(${heroImage})` } : undefined}
+        className={`cp-blog-closing ${!closingImage ? "cp-blog-closing-empty" : ""}`}
+        style={closingImage ? { backgroundImage: `linear-gradient(180deg, rgba(2,6,23,.72), rgba(2,6,23,.84)), url(${closingImage})` } : undefined}
       >
+        {isAdmin && (
+          <>
+            <input
+              ref={closingInputRef}
+              className="cp-blog-section-file"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => {
+                const selected = event.target.files?.[0];
+                if (selected) updateSectionImage("closing", selected);
+                event.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              className="cp-blog-section-camera"
+              onClick={() => closingInputRef.current?.click()}
+              disabled={assetBusy === "closing"}
+              title="Change bottom blog image"
+              aria-label="Change bottom blog image"
+            >
+              {assetBusy === "closing" ? "..." : "⌾"}
+            </button>
+          </>
+        )}
         <p>Learn deeply. Build boldly. Share generously.</p>
       </footer>
     </section>
