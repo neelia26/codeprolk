@@ -1,0 +1,30 @@
+.word-search-quiz { order: 2; width: 100%; margin-top: 1.25rem; padding: clamp(1rem,3vw,1.6rem); color: #f7fbff; background: radial-gradient(circle at 100% 0,rgba(56,189,248,.13),transparent 32%),linear-gradient(135deg,#071a3a,#092653 58%,#071a3a); border: 1px solid rgba(56,189,248,.24); border-radius: .85rem; box-shadow: 0 24px 64px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.1); user-select: none; }
+.word-search-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.word-search-head p { margin: 0 0 .3rem; color: #67d4ff; font: 700 .68rem 'PP Neue Montreal Text',Arial,sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+.word-search-head h2 { margin: 0; font: 500 clamp(1.5rem,4vw,2.2rem) 'PP Neue Montreal Title',Arial,sans-serif; }
+.word-search-timer { display: flex; align-items: center; gap: .4rem; padding: .6rem .75rem; border-left: 1px solid rgba(255,255,255,.18); font: 700 1rem 'PP Neue Montreal Text',Arial,sans-serif; }
+.word-search-timer.is-ready { color: #9edfff; font-size: .78rem; letter-spacing: .1em; }
+.word-search-timer.is-running svg { animation: wordSearchClockPulse 1.4s ease-in-out infinite; }
+.word-search-timer svg,.word-search-status svg { width: 1rem; color: #38bdf8; }
+.word-search-status { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin: 1.2rem 0; padding: .9rem 0; border-top: 1px solid rgba(255,255,255,.12); border-bottom: 1px solid rgba(255,255,255,.12); }
+.word-search-status div { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .15rem .5rem; }
+.word-search-status span { color: #8da7c2; font: 600 .7rem 'PP Neue Montreal Text',Arial,sans-serif; text-transform: uppercase; }
+.word-search-status strong { grid-column: 2; font: 600 .9rem 'PP Neue Montreal Text',Arial,sans-serif; }
+.word-search-guide { margin: -0.35rem 0 1rem; color: #afc4da; background: rgba(2,8,23,.26); border-left: 2px solid rgba(103,212,255,.72); }
+.word-search-guide summary { display: flex; align-items: center; gap: .45rem; padding: .65rem .75rem; color: #ddecfb; font: 700 .75rem 'PP Neue Montreal Text',Arial,sans-serif; letter-spacing: .04em; cursor: pointer; list-style: none; }
+.word-search-guide summary::-webkit-details-marker { display: none; }
+.word-search-guide summary svg { width: 1rem; color: #67d4ff; }
+.word-search-guide ul { display: grid; gap: .4rem; margin: 0; padding: 0 .9rem .85rem 2rem; font: 500 .76rem/1.45 'PP Neue Montreal Text',Arial,sans-serif; }
+.word-search-guide li::marker { color: #67d4ff; }
+.word-search-grid { position: relative; display: grid; grid-template-columns: repeat(var(--grid-size),minmax(0,1fr)); aspect-ratio: 1; width: min(100%,38rem); margin: auto; padding: .4rem; background: rgba(2,8,23,.35); border: 1px solid rgba(125,211,252,.15); touch-action: none; animation: wordGridRecompose .55s cubic-bezier(.2,.8,.2,1) both; }
+.word-search-watermark { position: absolute; inset: 50% auto auto 50%; z-index: 2; max-width: 80%; color: rgba(255,255,255,.055); font: 600 clamp(.8rem,3vw,1.35rem) 'PP Neue Montreal Text',Arial,sans-serif; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; pointer-events: none; transform: translate(-50%,-50%) rotate(-24deg); }
+.word-search-grid button { position: relative; z-index: 1; min-width: 0; padding: 0; color: #dbeafe; background: transparent; border: 0; border-radius: .2rem; font: 650 clamp(.52rem,1.7vw,.85rem) 'PP Neue Montreal Text',Arial,sans-serif; cursor: crosshair; transition: color .12s ease, background .12s ease, box-shadow .12s ease, transform .12s ease; }
+.word-search-grid.is-selecting button { cursor: grabbing; }
+.word-search-grid button.selected { z-index: 3; color: #031331; background: #7ddcff; box-shadow: 0 0 0 1px rgba(255,255,255,.35),0 0 14px rgba(56,189,248,.45); transform: scale(1.05); }
+.word-search-grid button.found { color: #fff; background: #0647b8; box-shadow: inset 0 0 0 1px rgba(125,220,255,.6),0 0 10px rgba(56,189,248,.22); }
+.word-search-foot { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1rem; color: #9eb4ca; font: 600 .78rem 'PP Neue Montreal Text',Arial,sans-serif; }
+.word-search-foot strong { color: #fff; }
+.word-search-intro{display:grid;justify-items:center;align-content:center;min-height:27rem;text-align:center;background:radial-gradient(circle at 50% 10%,rgba(56,189,248,.18),transparent 45%),linear-gradient(135deg,#071a3a,#092653 58%,#071a3a)}.word-search-intro h2{max-width:48rem;margin:.25rem 0;font:500 clamp(1.65rem,4vw,2.7rem) 'PP Neue Montreal Title',Arial,sans-serif}.word-search-intro>p:not(.word-search-intro-kicker){max-width:39rem;color:#abc2d9;line-height:1.6}.word-search-intro-kicker{margin:.8rem 0 .2rem;color:#67d4ff;font-size:.68rem;font-weight:800;letter-spacing:.16em}.word-search-intro-icon{display:grid;place-items:center;width:3rem;aspect-ratio:1;border:1px solid rgba(103,212,255,.4);border-radius:50%;background:rgba(56,189,248,.12)}.word-search-intro-icon svg{width:1.25rem;color:#7ddcff}.word-search-intro-meta{display:flex;align-items:center;gap:.7rem;margin:1rem 0;color:#8eabc5;font-size:.72rem;font-weight:700;text-transform:uppercase}.word-search-intro-meta i{width:3px;height:3px;background:#67d4ff;border-radius:50%}.word-search-intro .word-search-guide{width:min(100%,34rem);margin:.2rem 0 1.2rem;text-align:left}.word-search-start{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:2.9rem;padding:.75rem 1.3rem;color:#04142a;background:#7ddcff;border:0;border-radius:.35rem;font-weight:800;cursor:pointer}.word-search-start svg{width:1rem;fill:currentColor}
+@keyframes wordGridRecompose { from { opacity: .35; transform: scale(.985); filter: blur(3px); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
+@keyframes wordSearchClockPulse { 50% { opacity: .55; transform: scale(.92); } }
+@media(max-width:560px){.word-search-status{grid-template-columns:1fr}.word-search-grid{width:calc(100% + .4rem);margin-left:-.2rem}.word-search-grid button{font-size:clamp(.46rem,2.5vw,.72rem)}}

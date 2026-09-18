@@ -1,0 +1,154 @@
+/* Final adaptive safeguards shared by every page and form. */
+html,
+body,
+#root,
+.page-shell,
+.page-shell > main {
+  width: 100%;
+  max-width: 100%;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+main,
+section,
+article,
+form,
+fieldset,
+form > *,
+.page-shell > main > * {
+  min-width: 0;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+input,
+textarea,
+select,
+button {
+  max-width: 100%;
+}
+
+textarea {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .auth-page,
+  .quiz-page,
+  .leaderboard-page,
+  .admin-page,
+  .profile-page,
+  .cp-blog-publisher {
+    width: min(100% - 1rem, 100%) !important;
+    max-width: calc(100% - 1rem) !important;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  form,
+  fieldset,
+  form > div,
+  form > label,
+  form > input,
+  form > textarea,
+  form > select {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  form button,
+  .admin-row-actions button,
+  .profile-actions button {
+    min-height: 44px;
+    white-space: normal;
+  }
+
+  .admin-row-actions,
+  .profile-actions,
+  .quiz-comment-actions,
+  .cp-blog-inline-editor > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+  }
+
+  .quiz-comment-actions > *,
+  .cp-blog-inline-editor > div > button {
+    flex: 1 1 auto;
+  }
+
+  .quiz-comment-meta {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .quiz-comment-meta time {
+    white-space: nowrap;
+  }
+
+  .cp-blog-inline-editor textarea {
+    min-height: 12rem;
+  }
+
+  .ranking-table-scroll,
+  .admin-chart-scroll,
+  .admin-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 380px) {
+  .challenge-surface {
+    padding-right: .5rem;
+    padding-left: .5rem;
+  }
+
+  .challenge-surface .quiz-live-layout .quiz-review {
+    padding: 1rem;
+  }
+
+  .quiz-live-head,
+  .quiz-live-stream,
+  .quiz-comment-form {
+    padding-right: .75rem;
+    padding-left: .75rem;
+  }
+
+  .quiz-live-lock {
+    width: calc(100% - 1.5rem);
+    margin-right: .75rem;
+    margin-left: .75rem;
+  }
+
+  .cp-blog .cp-blog-post,
+  .cp-blog .cp-blog-post-expanded {
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    padding-right: .9rem;
+    padding-left: .9rem;
+  }
+
+  .cp-blog .cp-blog-post::before {
+    right: .9rem;
+    left: .9rem;
+    width: auto;
+  }
+}

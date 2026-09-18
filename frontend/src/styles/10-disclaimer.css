@@ -1,0 +1,311 @@
+/* =========================
+   DISCLAIMER PAGE - SIMPLE DARK LEGAL STYLE
+========================= */
+
+.disclaimer-page {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  min-height: 100svh;
+  padding: 9rem 2rem 6rem;
+
+  background:
+    radial-gradient(circle at 12% 16%, rgba(56, 189, 248, 0.16), transparent 30%),
+    radial-gradient(circle at 88% 14%, rgba(6, 71, 184, 0.24), transparent 32%),
+    linear-gradient(135deg, #020617 0%, #071226 52%, #020617 100%);
+
+  color: #ffffff;
+}
+
+.disclaimer-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+
+  background-size: 78px 78px;
+  opacity: 0.34;
+
+  mask-image: radial-gradient(circle at center, #000 0%, rgba(0, 0, 0, 0.68) 58%, transparent 94%);
+  -webkit-mask-image: radial-gradient(circle at center, #000 0%, rgba(0, 0, 0, 0.68) 58%, transparent 94%);
+}
+
+.disclaimer-inner {
+  position: relative;
+  z-index: 1;
+
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+/* HEADER */
+
+.disclaimer-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.disclaimer-tag {
+  margin: 0 0 1rem;
+
+  color: #7dd3fc;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.disclaimer-header h1 {
+  margin: 0;
+
+  font-family: 'PP Neue Montreal Title', Arial, sans-serif;
+  font-size: clamp(3.4rem, 7vw, 6.8rem);
+  font-weight: 300;
+  line-height: 0.88;
+  letter-spacing: -0.085em;
+
+  color: #ffffff;
+}
+
+.disclaimer-intro {
+  max-width: 720px;
+  margin: 1.35rem auto 0;
+
+  color: rgba(219, 234, 254, 0.78);
+  font-size: 1.05rem;
+  line-height: 1.82;
+}
+
+/* CARDS */
+
+.disclaimer-card-list {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.disclaimer-card {
+  position: relative;
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 1.35rem;
+
+  padding: clamp(1.6rem, 3vw, 2.4rem);
+
+  border-radius: 1.6rem;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.03)),
+    rgba(15, 23, 42, 0.72);
+
+  box-shadow:
+    0 24px 70px rgba(2, 6, 23, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.disclaimer-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(125, 211, 252, 0.34);
+
+  box-shadow:
+    0 30px 86px rgba(2, 6, 23, 0.48),
+    0 0 30px rgba(56, 189, 248, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.disclaimer-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  width: 5px;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--logo-dark-blue, #0647b8),
+      var(--logo-light-blue, #7dd3fc)
+    );
+}
+
+.disclaimer-card-number {
+  position: relative;
+  z-index: 1;
+
+  width: 4rem;
+  height: 4rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 1rem;
+
+  background: rgba(255, 255, 255, 0.1);
+  color: #7dd3fc;
+
+  font-size: 0.88rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+
+  box-shadow:
+    0 14px 34px rgba(2, 6, 23, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.disclaimer-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+.disclaimer-card-content h2 {
+  margin: 0;
+
+  font-family: 'PP Neue Montreal Title', Arial, sans-serif;
+  font-size: clamp(2rem, 3.4vw, 3.4rem);
+  font-weight: 300;
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+
+  color: #ffffff;
+}
+
+.disclaimer-card-content p {
+  margin: 0.9rem 0 0;
+
+  color: rgba(219, 234, 254, 0.78);
+  font-size: 1rem;
+  line-height: 1.78;
+}
+
+/* BOTTOM NOTE */
+
+.disclaimer-bottom-note {
+  margin-top: 1.4rem;
+  padding: 1.25rem 1.35rem;
+
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+
+  border-radius: 1.25rem;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+
+  background: rgba(255, 255, 255, 0.055);
+
+  box-shadow:
+    0 18px 50px rgba(2, 6, 23, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.disclaimer-bottom-note span {
+  width: 2.6rem;
+  height: 2.6rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+  color: #0647b8;
+
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.disclaimer-bottom-note p {
+  margin: 0;
+
+  color: rgba(219, 234, 254, 0.8);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 760px) {
+  .disclaimer-page {
+    padding: 8rem 1.25rem 5rem;
+  }
+
+  .disclaimer-header {
+    text-align: left;
+    margin-bottom: 2.4rem;
+  }
+
+  .disclaimer-intro {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .disclaimer-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 1.35rem;
+  }
+
+  .disclaimer-card-number {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .disclaimer-card-content h2 {
+    font-size: clamp(1.9rem, 10vw, 2.85rem);
+  }
+
+  .disclaimer-card-content p {
+    font-size: 0.94rem;
+    line-height: 1.7;
+  }
+
+  .disclaimer-bottom-note {
+    grid-template-columns: 1fr;
+    border-radius: 1.35rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .disclaimer-page {
+    padding: 7rem 1rem 4rem;
+  }
+
+  .disclaimer-header h1 {
+    font-size: clamp(3rem, 16vw, 4.8rem);
+  }
+
+  .disclaimer-intro {
+    font-size: 0.96rem;
+    line-height: 1.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclaimer-card {
+    transition: none !important;
+  }
+}
+

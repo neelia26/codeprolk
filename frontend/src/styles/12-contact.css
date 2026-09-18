@@ -1,0 +1,707 @@
+/* =========================
+   CONTACT PAGE - PREMIUM ICON FOCUS STYLE
+   Bigger icons, no outer boxes,
+   angled glossy premium icon animation
+========================= */
+
+.contact-page-social-hub {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  min-height: 100svh;
+  padding: 8.5rem 2rem 5.5rem;
+
+  background:
+    radial-gradient(circle at 14% 18%, rgba(56, 189, 248, 0.13), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(148, 163, 184, 0.08), transparent 28%),
+    linear-gradient(135deg, #020617 0%, #071226 52%, #020617 100%);
+
+  color: #ffffff;
+}
+
+.contact-hub-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+
+  background-size: 78px 78px;
+  opacity: 0.13;
+
+  mask-image: radial-gradient(circle at center, #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(circle at center, #000 0%, transparent 78%);
+}
+
+.contact-hub-glow {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+
+  width: 28rem;
+  height: 28rem;
+  border-radius: 999px;
+
+  filter: blur(105px);
+  opacity: 0.18;
+}
+
+.contact-hub-glow-one {
+  top: 8%;
+  left: -12rem;
+  background: rgba(56, 189, 248, 0.7);
+}
+
+.contact-hub-glow-two {
+  right: -12rem;
+  bottom: 12%;
+  background: rgba(148, 163, 184, 0.55);
+}
+
+.contact-hub-inner {
+  position: relative;
+  z-index: 1;
+
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+}
+
+/* =========================
+   HERO
+========================= */
+
+.contact-hub-hero {
+  max-width: 820px;
+  margin: 0 auto 4rem;
+  text-align: center;
+}
+
+.contact-hub-tag {
+  margin: 0 0 0.9rem;
+
+  color: rgba(191, 219, 254, 0.82);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.contact-hub-hero h1 {
+  position: relative;
+
+  margin: 0;
+  padding-bottom: 1rem;
+
+  display: inline-block;
+
+  font-family: 'PP Neue Montreal Title', Arial, sans-serif;
+  font-size: clamp(2.8rem, 5.4vw, 5rem);
+  font-weight: 300;
+  line-height: 0.92;
+  letter-spacing: -0.075em;
+
+  color: #ffffff;
+}
+
+.contact-hub-hero h1::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  width: min(320px, 72vw);
+  height: 1px;
+
+  transform: translateX(-50%);
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(148, 163, 184, 0.45),
+    rgba(255, 255, 255, 0.78),
+    rgba(148, 163, 184, 0.45),
+    transparent
+  );
+}
+
+.contact-hub-hero h1::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+
+  width: 72px;
+  height: 2px;
+
+  border-radius: 999px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ffffff,
+    rgba(226, 232, 240, 1),
+    transparent
+  );
+
+  box-shadow:
+    0 0 10px rgba(255, 255, 255, 0.68),
+    0 0 20px rgba(148, 163, 184, 0.38);
+
+  transform: translateX(-185px);
+  animation: contactHubSilverLineRun 3.2s ease-in-out infinite;
+}
+
+@keyframes contactHubSilverLineRun {
+  0% {
+    transform: translateX(-185px);
+    opacity: 0;
+  }
+
+  20%,
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(110px);
+    opacity: 0;
+  }
+}
+
+.contact-hub-hero > p:not(.contact-hub-tag) {
+  max-width: 640px;
+  margin: 1.2rem auto 0;
+
+  color: rgba(219, 234, 254, 0.72);
+  font-size: 0.98rem;
+  line-height: 1.72;
+}
+
+.contact-hub-actions {
+  margin-top: 1.85rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.contact-hub-main-button,
+.contact-hub-outline-button {
+  min-height: 3rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+
+  padding: 0.9rem 1.25rem;
+
+  border-radius: 999px;
+
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  transition:
+    transform 0.24s ease,
+    background 0.24s ease,
+    color 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.contact-hub-main-button {
+  border: 1px solid #ffffff;
+  background: #ffffff;
+  color: #0647b8;
+
+  box-shadow:
+    0 14px 34px rgba(56, 189, 248, 0.16),
+    0 0 22px rgba(255, 255, 255, 0.1);
+}
+
+.contact-hub-outline-button {
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+.contact-hub-main-button:hover,
+.contact-hub-main-button:focus-visible,
+.contact-hub-outline-button:hover,
+.contact-hub-outline-button:focus-visible {
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.contact-hub-outline-button:hover,
+.contact-hub-outline-button:focus-visible {
+  background: #ffffff;
+  color: #0647b8;
+  border-color: #ffffff;
+}
+
+/* =========================
+   SOCIAL AREA
+========================= */
+
+.contact-hub-social-stage {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.contact-hub-social-label {
+  margin: 0 0 1.6rem;
+
+  color: rgba(191, 219, 254, 0.7);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.contact-hub-social-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1.4rem;
+  align-items: start;
+}
+
+/* No outer box around each icon */
+.contact-hub-social-button {
+  position: relative;
+  text-decoration: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  padding: 0.2rem 0.4rem 0;
+
+  background: transparent;
+  border: none;
+  box-shadow: none;
+
+  transition: transform 0.28s ease;
+}
+
+.contact-hub-social-button:hover,
+.contact-hub-social-button:focus-visible {
+  transform: translateY(-6px);
+  outline: none;
+}
+
+.contact-hub-social-arrow {
+  position: absolute;
+  top: 0.25rem;
+  right: 1.2rem;
+
+  width: 1.8rem;
+  height: 1.8rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.82rem;
+
+  opacity: 0;
+  transform: translateY(4px);
+
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.contact-hub-social-button:hover .contact-hub-social-arrow,
+.contact-hub-social-button:focus-visible .contact-hub-social-arrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Big premium icon */
+.contact-hub-social-icon {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  width: 7.3rem;
+  height: 7.3rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 1rem;
+
+  border-radius: 1.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+
+  background:
+    radial-gradient(
+      circle at 28% 22%,
+      rgba(255, 255, 255, 0.98),
+      rgba(226, 232, 240, 0.96) 54%,
+      rgba(203, 213, 225, 0.93) 100%
+    );
+
+  box-shadow:
+    0 18px 44px rgba(2, 6, 23, 0.32),
+    0 0 24px rgba(56, 189, 248, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+/* Diagonal premium shine effect */
+.contact-hub-social-icon::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  z-index: 0;
+  pointer-events: none;
+
+  background: linear-gradient(
+    135deg,
+    transparent 34%,
+    rgba(255, 255, 255, 0.08) 42%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(125, 211, 252, 0.48) 55%,
+    transparent 64%
+  );
+
+  transform: translate(-140%, -140%) rotate(10deg);
+  animation: contactIconDiagonalSweep 4.6s ease-in-out infinite;
+}
+
+/* Soft inner blue reflection */
+.contact-hub-social-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  background:
+    radial-gradient(circle at 22% 24%, rgba(56, 189, 248, 0.14), transparent 34%),
+    radial-gradient(circle at 78% 76%, rgba(6, 71, 184, 0.1), transparent 30%);
+}
+
+@keyframes contactIconDiagonalSweep {
+  0% {
+    transform: translate(-140%, -140%) rotate(10deg);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(140%, 140%) rotate(10deg);
+    opacity: 0;
+  }
+}
+
+.contact-hub-social-button:hover .contact-hub-social-icon,
+.contact-hub-social-button:focus-visible .contact-hub-social-icon {
+  transform: translateY(-4px) scale(1.06);
+  border-color: rgba(255, 255, 255, 0.24);
+
+  box-shadow:
+    0 24px 54px rgba(2, 6, 23, 0.38),
+    0 0 30px rgba(56, 189, 248, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.contact-hub-social-icon img {
+  position: relative;
+  z-index: 1;
+
+  width: 42%;
+  height: 42%;
+  object-fit: contain;
+}
+
+.contact-hub-social-name {
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+/* =========================
+   FINAL TEXT
+========================= */
+
+.contact-hub-final-text {
+  margin-top: 3.4rem;
+  text-align: center;
+}
+
+.contact-hub-final-text p {
+  max-width: 860px;
+  margin: 0 auto;
+
+  font-family: 'PP Neue Montreal Title', Arial, sans-serif;
+  font-size: clamp(2rem, 4.8vw, 4rem);
+  font-weight: 300;
+  line-height: 0.98;
+  letter-spacing: -0.07em;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.42),
+      #ffffff,
+      rgba(203, 213, 225, 0.72)
+    );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1040px) {
+  .contact-hub-social-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .contact-page-social-hub {
+    padding: 7.4rem 1.1rem 4.5rem;
+  }
+
+  .contact-hub-inner {
+    width: 100%;
+  }
+
+  .contact-hub-hero {
+    margin-bottom: 3rem;
+  }
+
+  .contact-hub-hero h1 {
+    font-size: clamp(2.5rem, 12vw, 3.8rem);
+    letter-spacing: -0.07em;
+  }
+
+  .contact-hub-hero > p:not(.contact-hub-tag) {
+    font-size: 0.94rem;
+    line-height: 1.68;
+  }
+
+  .contact-hub-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .contact-hub-main-button,
+  .contact-hub-outline-button {
+    width: 100%;
+  }
+
+  .contact-hub-social-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.2rem;
+  }
+
+  .contact-hub-social-icon {
+    width: 6.3rem;
+    height: 6.3rem;
+    border-radius: 1.45rem;
+  }
+
+  .contact-hub-social-name {
+    font-size: 0.9rem;
+  }
+
+  .contact-hub-final-text p {
+    font-size: clamp(2rem, 11vw, 3.1rem);
+    line-height: 1;
+  }
+}
+
+@media (max-width: 420px) {
+  .contact-hub-social-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-hub-social-icon {
+    width: 6rem;
+    height: 6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-hub-hero h1::after,
+  .contact-hub-social-icon::before,
+  .contact-hub-social-button,
+  .contact-hub-social-icon {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* =========================
+   RUNNING SILVER LINE - SERVICES + COURSES
+========================= */
+
+.services-page-header h1,
+.courses-page-header h1 {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 1.1rem;
+}
+
+.services-page-header h1::before,
+.courses-page-header h1::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  width: min(360px, 78vw);
+  height: 1px;
+
+  transform: translateX(-50%);
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(148, 163, 184, 0.35),
+    rgba(255, 255, 255, 0.75),
+    rgba(148, 163, 184, 0.35),
+    transparent
+  );
+
+  opacity: 0.85;
+}
+
+.services-page-header h1::after,
+.courses-page-header h1::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+
+  width: 90px;
+  height: 3px;
+
+  border-radius: 999px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.95),
+    rgba(226, 232, 240, 1),
+    rgba(255, 255, 255, 0.95),
+    transparent
+  );
+
+  box-shadow:
+    0 0 10px rgba(255, 255, 255, 0.75),
+    0 0 22px rgba(148, 163, 184, 0.5);
+
+  transform: translateX(-230px);
+  animation: silverTitleLineRun 2.8s ease-in-out infinite;
+}
+
+@keyframes silverTitleLineRun {
+  0% {
+    transform: translateX(-230px);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(140px);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .services-page-header h1,
+  .courses-page-header h1 {
+    padding-bottom: 0.85rem;
+  }
+
+  .services-page-header h1::before,
+  .courses-page-header h1::before {
+    width: min(280px, 76vw);
+  }
+
+  .services-page-header h1::after,
+  .courses-page-header h1::after {
+    width: 70px;
+    animation-duration: 3.2s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-page-header h1::after,
+  .courses-page-header h1::after {
+    animation: none !important;
+    opacity: 0.8;
+    transform: translateX(-50%);
+  }
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+.page-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-shell > main {
+  flex: 1 0 auto;
+}
+
+.site-footer {
+  margin-top: auto;
+  flex-shrink: 0;
+}

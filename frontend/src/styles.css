@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@import "./styles/00-foundations.css";
+@import "./styles/01-navigation.css";
+@import "./styles/02-account-admin-base.css";
+@import "./styles/03-home.css";
+@import "./styles/04-shell-footer-chat.css";
+@import "./styles/05-roadmap.css";
+@import "./styles/06-services.css";
+@import "./styles/07-courses.css";
+@import "./styles/08-about.css";
+@import "./styles/09-terms.css";
+@import "./styles/10-disclaimer.css";
+@import "./styles/11-privacy.css";
+@import "./styles/12-contact.css";
+@import "./styles/13-quiz-auth-leaderboard.css";
+@import "./styles/14-blog-legacy.css";
+@import "./styles/15-navigation-refinements.css";
+@import "./styles/16-profile.css";
+@import "./styles/17-admin-final.css";
+@import "./styles/18-blog.css";
+@import "./styles/19-responsive-safety.css";
+@import "./styles/20-quiz-streak.css";
+@import "./styles/21-word-search.css";
+@import "./styles/22-bug-hunt.css";
+@import "./styles/23-optimal-point.css";

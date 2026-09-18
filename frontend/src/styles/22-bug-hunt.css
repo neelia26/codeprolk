@@ -1,0 +1,50 @@
+.bug-hunt { order: 2; width: 100%; margin-top: 1.25rem; padding: clamp(1rem,3vw,1.75rem); color: #f4f8ff; background: linear-gradient(145deg,#071225,#0b2141 58%,#07172d); border: 1px solid rgba(89,184,255,.28); border-radius: .75rem; box-shadow: 0 24px 70px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.08); }
+.bug-hunt-kicker { margin: 0 0 .35rem; color: #63d8ff; font: 800 .68rem 'PP Neue Montreal Text',Arial,sans-serif; letter-spacing: .14em; }
+.bug-hunt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.bug-hunt-head h2,.bug-hunt-intro h2,.bug-hunt-finished h2 { margin: 0; font: 500 clamp(1.65rem,4vw,2.65rem) 'PP Neue Montreal Title',Arial,sans-serif; }
+.bug-hunt-timer { display: inline-flex; align-items: center; gap: .45rem; min-width: 6.5rem; justify-content: flex-end; color: #dff6ff; font: 800 1rem 'PP Neue Montreal Text',Arial,sans-serif; font-variant-numeric: tabular-nums; }
+.bug-hunt-timer svg { width: 1rem; color: #63d8ff; }
+.bug-hunt-progress { height: 2px; margin: 1.2rem 0 1.35rem; background: rgba(255,255,255,.1); overflow: hidden; }
+.bug-hunt-progress i { display: block; height: 100%; background: #63d8ff; box-shadow: 0 0 15px rgba(99,216,255,.7); transition: width .35s ease; }
+.bug-hunt-workspace { display: grid; gap: clamp(1.35rem,3vw,2rem); }
+.bug-hunt-code-panel,.bug-hunt-decisions fieldset { min-width: 0; margin: 0; padding: clamp(1.25rem,3vw,2rem); background: rgba(2,8,23,.52); border: 1px solid rgba(148,181,217,.16); border-radius: .55rem; }
+.bug-hunt-code-panel h3,.bug-hunt-decisions legend { display: flex; align-items: center; gap: .55rem; margin: 0 0 1.15rem; color: #d3e2f2; font: 750 clamp(.82rem,1.7vw,.95rem) 'PP Neue Montreal Text',Arial,sans-serif; letter-spacing: .035em; }
+.bug-hunt-code-panel h3 svg,.bug-hunt-decisions legend svg { width: 1rem; color: #63d8ff; }
+.bug-hunt-code { margin: 0; padding: .7rem 0 .7rem 3.2rem; background: #030a16; border-left: 2px solid rgba(99,216,255,.35); counter-reset: bugline; overflow-x: auto; }
+.bug-hunt-code li { padding-left: .55rem; color: #6f88a5; font: 600 clamp(.78rem,1.4vw,.9rem)/1.75 ui-monospace,SFMono-Regular,Menlo,monospace; }
+.bug-hunt-code li::marker { font-variant-numeric: tabular-nums; }
+.bug-hunt-code button { width: 100%; min-height: 2.35rem; padding: .35rem .7rem; color: #cfdef0; text-align: left; background: transparent; border: 0; border-radius: .2rem; cursor: crosshair; }
+.bug-hunt-code li:hover button { background: rgba(89,184,255,.08); }
+.bug-hunt-code li.selected button { color: #02101f; background: #72dcff; box-shadow: 0 0 18px rgba(89,184,255,.3); }
+.bug-hunt-decisions { display: grid; grid-template-columns: 1fr; gap: clamp(1.35rem,3vw,2rem); }
+.bug-hunt-decisions fieldset { position: relative; display: grid; align-content: start; gap: .85rem; overflow: hidden; background: linear-gradient(135deg,rgba(4,14,31,.82),rgba(8,31,59,.68)); box-shadow: inset 0 1px 0 rgba(255,255,255,.035); }
+.bug-hunt-decisions fieldset::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 2px; background: linear-gradient(180deg,transparent,#63d8ff 32%,#2564b9 68%,transparent); opacity: .7; }
+.bug-hunt-decisions label { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 1rem; min-height: 4.5rem; padding: 1rem 1.15rem; color: #c4d4e7; background: rgba(9,24,46,.68); border: 1px solid rgba(148,181,217,.16); border-radius: .4rem; cursor: pointer; font: 550 clamp(.88rem,1.6vw,.98rem)/1.5 'PP Neue Montreal Text',Arial,sans-serif; transition: border-color .18s ease,background .18s ease,transform .18s ease,box-shadow .18s ease; }
+.bug-hunt-decisions label:hover { border-color: rgba(99,216,255,.48); background: rgba(13,38,70,.82); transform: translateX(3px); }
+.bug-hunt-decisions label.selected { color: #f4fbff; background: linear-gradient(100deg,rgba(15,82,139,.76),rgba(10,50,92,.78)); border-color: #63d8ff; box-shadow: 0 10px 26px rgba(0,19,44,.25),inset 3px 0 0 #79dcff; }
+.bug-hunt-decisions input { width: 1.05rem; height: 1.05rem; margin: 0; accent-color: #54cfff; }
+.bug-hunt-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.1rem; color: #92aac3; font: 600 .78rem 'PP Neue Montreal Text',Arial,sans-serif; }
+.bug-hunt-actions button,.bug-hunt-start { min-height: 2.75rem; padding: .7rem 1.15rem; color: #02101f; background: #79dcff; border: 0; border-radius: .35rem; font: 800 .76rem 'PP Neue Montreal Text',Arial,sans-serif; cursor: pointer; }
+.bug-hunt-actions button:disabled { opacity: .4; cursor: not-allowed; }
+.bug-hunt-intro,.bug-hunt-finished { display: grid; justify-items: center; padding-block: clamp(2.2rem,7vw,5rem); text-align: center; }
+.bug-hunt-intro { position: relative; min-height: 26rem; align-content: center; overflow: hidden; background: radial-gradient(circle at 50% 0,rgba(36,130,214,.18),transparent 48%),linear-gradient(145deg,#061020,#0a1b36 62%,#07152a); }
+.bug-hunt-intro::before { content: ""; position: absolute; inset: 1rem; pointer-events: none; border: 1px solid rgba(121,220,255,.08); }
+.bug-hunt-intro-topline { display: flex; align-items: center; gap: .65rem; margin-bottom: 1.15rem; }
+.bug-hunt-intro-topline .bug-hunt-kicker { margin: 0; }
+.bug-hunt-intro>p:not(.bug-hunt-kicker),.bug-hunt-finished>p:not(.bug-hunt-kicker) { max-width: 42rem; color: #a9bdd2; line-height: 1.6; }
+.bug-hunt-intro .bug-hunt-brief { margin: .85rem 0 .9rem; color: #9fb6cf; font: 600 .9rem 'PP Neue Montreal Text',Arial,sans-serif; letter-spacing: .04em; }
+.bug-hunt-mark { display: grid; place-items: center; width: 2.15rem; aspect-ratio: 1; color: #bcecff; background: rgba(31,113,183,.18); border: 1px solid rgba(121,220,255,.36); border-radius: 50%; box-shadow: 0 0 24px rgba(99,216,255,.12); }
+.bug-hunt-mark svg,.bug-hunt-complete-icon { width: 1.5rem; }
+.bug-hunt-intro .bug-hunt-mark svg { width: 1rem; }
+.bug-hunt-meta { display: flex; align-items: center; justify-content: center; gap: .65rem; margin-bottom: 1.35rem; color: #7f9bb8; font: 700 .7rem 'PP Neue Montreal Text',Arial,sans-serif; text-transform: uppercase; letter-spacing: .08em; }
+.bug-hunt-meta i { width: 2px; height: 2px; background: #63d8ff; border-radius: 50%; box-shadow: 0 0 8px #63d8ff; }
+.bug-hunt-intro .bug-hunt-start { min-width: 9.5rem; border: 1px solid rgba(199,240,255,.5); box-shadow: 0 10px 28px rgba(29,151,214,.18); transition: transform .2s ease,box-shadow .2s ease; }
+.bug-hunt-intro .bug-hunt-start:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(29,151,214,.28); }
+.bug-hunt-complete-icon { width: 2.4rem; height: 2.4rem; margin-bottom: 1rem; color: #69e4bd; }
+.bug-hunt-results { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); width: min(100%,54rem); gap: .8rem; margin-top: 1.2rem; text-align: left; }
+.bug-hunt-results article { padding: .9rem; background: rgba(2,8,23,.45); border-top: 1px solid rgba(99,216,255,.5); }
+.bug-hunt-results article>span { float: right; color: #63d8ff; font-weight: 800; }
+.bug-hunt-results article p { margin: .65rem 0 0; color: #9db2c8; font-size: .76rem; line-height: 1.45; }
+.bug-hunt-message { color: #ffcf8d; }
+@media(max-width:800px){.bug-hunt-results{grid-template-columns:1fr}.bug-hunt-head{align-items:flex-start}.bug-hunt-code button{white-space:pre;}}
+@media(max-width:520px){.bug-hunt{padding:.9rem}.bug-hunt-head{display:grid}.bug-hunt-timer{justify-content:flex-start}.bug-hunt-code-panel,.bug-hunt-decisions fieldset{padding:1rem}.bug-hunt-decisions label{min-height:4.15rem;padding:.9rem}.bug-hunt-actions{align-items:stretch;flex-direction:column}.bug-hunt-actions button{width:100%}}

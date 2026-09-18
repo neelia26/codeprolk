@@ -1,0 +1,388 @@
+/* =========================
+   SERVICES PAGE - CLEAN IMAGE CARDS
+========================= */
+
+.services-page {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  min-height: 100svh;
+  padding: 8.5rem 2rem 6rem;
+
+  background:
+    radial-gradient(circle at 12% 14%, rgba(56, 189, 248, 0.12), transparent 30%),
+    radial-gradient(circle at 88% 12%, rgba(6, 71, 184, 0.16), transparent 34%),
+    linear-gradient(135deg, #020617 0%, #071226 48%, #020617 100%);
+
+  color: #ffffff;
+}
+
+.services-page-inner {
+  position: relative;
+  z-index: 1;
+
+  width: min(1320px, calc(100% - 2rem));
+  margin: 0 auto;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.services-page-header {
+  max-width: 860px;
+  margin: 0 auto 4rem;
+  text-align: center;
+}
+
+.services-page-tag {
+  margin: 0 0 1rem;
+
+  color: rgba(191, 219, 254, 0.84);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.services-page-header h1 {
+  margin: 0;
+
+  font-family: 'PP Neue Montreal Title', Arial, sans-serif;
+  font-size: clamp(3rem, 5.5vw, 5.2rem);
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.075em;
+
+  color: #ffffff;
+}
+
+.services-page-header p {
+  max-width: 720px;
+  margin: 1.2rem auto 0;
+
+  color: rgba(219, 234, 254, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+/* =========================
+   SHOWCASE LIST
+========================= */
+
+.services-page-showcase {
+  display: grid;
+  gap: 2rem;
+}
+
+.services-page-card {
+  position: relative;
+  overflow: hidden;
+
+  min-height: 450px;
+
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+
+  border-radius: 2.2rem;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    rgba(15, 23, 42, 0.76);
+
+  box-shadow:
+    0 28px 80px rgba(2, 6, 23, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.services-page-card-flipped {
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+}
+
+.services-page-card-flipped .services-page-image-shell {
+  order: 2;
+}
+
+.services-page-card-flipped .services-page-card-body {
+  order: 1;
+}
+
+/* =========================
+   IMAGE AREA
+========================= */
+
+.services-page-image-shell {
+  position: relative;
+  overflow: hidden;
+
+  min-height: 450px;
+
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 0% 100%);
+}
+
+.services-page-card-flipped .services-page-image-shell {
+  clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.services-page-image-shell img {
+  width: 100%;
+  height: 100%;
+  min-height: 450px;
+
+  display: block;
+  object-fit: cover;
+
+  opacity: 0.86;
+  filter: saturate(1.02) contrast(1.05) brightness(0.9);
+}
+
+.services-page-image-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  background:
+    radial-gradient(circle at 28% 18%, rgba(125, 211, 252, 0.24), transparent 32%),
+    linear-gradient(90deg, rgba(2, 6, 23, 0.18), rgba(2, 6, 23, 0.64));
+
+  pointer-events: none;
+}
+
+.services-page-card-flipped .services-page-image-layer {
+  background:
+    radial-gradient(circle at 74% 18%, rgba(125, 211, 252, 0.24), transparent 32%),
+    linear-gradient(270deg, rgba(2, 6, 23, 0.18), rgba(2, 6, 23, 0.64));
+}
+
+.services-page-image-number {
+  position: absolute;
+  left: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 4;
+
+  width: 4.1rem;
+  height: 4.1rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+
+  box-shadow:
+    0 14px 30px rgba(2, 6, 23, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.services-page-card-flipped .services-page-image-number {
+  left: auto;
+  right: 1.5rem;
+}
+
+/* =========================
+   CONTENT AREA
+========================= */
+
+.services-page-card-body {
+  position: relative;
+  z-index: 4;
+
+  padding: clamp(2rem, 4vw, 3.25rem);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.services-page-card-body::before {
+  content: "";
+  position: absolute;
+  left: clamp(2rem, 4vw, 3.25rem);
+  top: 2.2rem;
+
+  width: 64px;
+  height: 2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(125, 211, 252, 0.9),
+      rgba(255, 255, 255, 0.58),
+      transparent
+    );
+}
+
+.services-page-card-eyebrow {
+  margin: 0 0 1rem;
+
+  color: #7dd3fc;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.services-page-card-body h2 {
+  margin: 0 0 1.15rem;
+
+  font-family: 'PP Neue Montreal Title', Arial, sans-serif;
+  font-size: clamp(2rem, 3.2vw, 3.5rem);
+  font-weight: 300;
+  line-height: 0.96;
+  letter-spacing: -0.065em;
+
+  color: #ffffff;
+}
+
+.services-page-card-body > p:not(.services-page-card-eyebrow) {
+  margin: 0;
+
+  color: rgba(219, 234, 254, 0.78);
+  font-size: 1rem;
+  line-height: 1.78;
+}
+
+.services-page-contact-btn {
+  width: fit-content;
+  margin-top: 1.75rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+
+  padding: 0.9rem 1.3rem;
+
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.services-page-contact-btn:hover,
+.services-page-contact-btn:focus-visible {
+  background: #ffffff;
+  color: #0647b8;
+  border-color: #ffffff;
+  outline: none;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 980px) {
+  .services-page {
+    padding: 7.5rem 1.25rem 5rem;
+  }
+
+  .services-page-inner {
+    width: 100%;
+  }
+
+  .services-page-card,
+  .services-page-card-flipped {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+
+  .services-page-card-flipped .services-page-image-shell,
+  .services-page-card-flipped .services-page-card-body {
+    order: initial;
+  }
+
+  .services-page-image-shell,
+  .services-page-card-flipped .services-page-image-shell {
+    min-height: 300px;
+    clip-path: none;
+  }
+
+  .services-page-image-shell img {
+    min-height: 300px;
+  }
+
+  .services-page-card-body {
+    padding: 2rem;
+  }
+
+  .services-page-card-body::before {
+    left: 2rem;
+    top: 1.6rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .services-page {
+    padding: 7rem 1rem 4.5rem;
+  }
+
+  .services-page-header {
+    margin-bottom: 3rem;
+  }
+
+  .services-page-header h1 {
+    font-size: clamp(2.5rem, 13vw, 3.8rem);
+    letter-spacing: -0.065em;
+  }
+
+  .services-page-header p {
+    font-size: 0.96rem;
+    line-height: 1.7;
+  }
+
+  .services-page-image-shell,
+  .services-page-card-flipped .services-page-image-shell {
+    min-height: 240px;
+  }
+
+  .services-page-image-shell img {
+    min-height: 240px;
+  }
+
+  .services-page-card-body {
+    padding: 1.65rem;
+  }
+
+  .services-page-card-body::before {
+    display: none;
+  }
+
+  .services-page-card-body h2 {
+    font-size: clamp(1.9rem, 10vw, 2.8rem);
+  }
+
+  .services-page-card-body > p:not(.services-page-card-eyebrow) {
+    font-size: 0.96rem;
+  }
+
+  .services-page-image-number {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 0.82rem;
+  }
+}
+
+
+

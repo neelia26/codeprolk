@@ -1,0 +1,93 @@
+@font-face {
+  font-family: 'PP Neue Montreal Title';
+  src: url('../assests/fonts/PPNeueMontreal-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Neue Montreal Title';
+  src: url('../assests/fonts/PPNeueMontreal-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Neue Montreal Text';
+  src: url('../assests/fonts/PPNeueMontrealText-Book.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Neue Montreal Text';
+  src: url('../assests/fonts/PPNeueMontreal-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  font-family: 'PP Neue Montreal Text', Arial, sans-serif;
+  background: #020617;
+  color: #0f172a;
+  line-height: 1.65;
+
+  --logo-dark-blue: #0647b8;
+  --logo-light-blue: #38bdf8;
+
+  --landing-bg: #d8eef3;
+  --landing-soft: #c6e3eb;
+  --landing-light: #eefbff;
+  --landing-muted: #455d63;
+  --landing-dark: #071216;
+
+  --deep-blue: #020617;
+  --mid-blue: #071c4d;
+  --white: #ffffff;
+  --black: #0b0b0b;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #020617;
+  font-family: 'PP Neue Montreal Text', Arial, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: 'PP Neue Montreal Text', Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
